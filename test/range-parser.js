@@ -1,4 +1,6 @@
 
+var parse = require('..');
+
 describe('parseRange(len, str)', function(){
   it('should parse range strings', function(){
     parse(1000, 'bytes=0-499').should.eql([{ start: 0, end: 499 }]);
