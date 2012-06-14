@@ -10,7 +10,9 @@
 
 module.exports = function(size, str){
   var valid = true;
-  var arr = str.substr(6).split(',').map(function(range){
+  var i = str.indexOf('=');
+
+  var arr = str.slice(i + 1).split(',').map(function(range){
     var range = range.split('-')
       , start = parseInt(range[0], 10)
       , end = parseInt(range[1], 10);
@@ -35,6 +37,8 @@ module.exports = function(size, str){
       end: end
     };
   });
+
+  arr.type = str.slice(0, i);
 
   return valid ? arr : null;
 };
