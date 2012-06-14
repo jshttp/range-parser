@@ -11,5 +11,6 @@ describe('parseRange(len, str)', function(){
     parse(1000, 'bytes=400-').should.eql([{ start: 400, end: 999 }]);
     parse(1000, 'bytes=0-0').should.eql([{ start: 0, end: 0 }]);
     parse(1000, 'bytes=-1').should.eql([{ start: 999, end: 999 }]);
+    parse(1000, 'bytes=40-80,-1').should.eql([{ start: 40, end: 80 }, { start: 999, end: 999 }]);
   })
 })
