@@ -12,6 +12,8 @@ module.exports = function(size, str){
   var valid = true;
   var i = str.indexOf('=');
 
+  if (-1 == i) return -2;
+
   var arr = str.slice(i + 1).split(',').map(function(range){
     var range = range.split('-')
       , start = parseInt(range[0], 10)
@@ -43,5 +45,5 @@ module.exports = function(size, str){
 
   arr.type = str.slice(0, i);
 
-  return valid ? arr : null;
+  return valid ? arr : -1;
 };

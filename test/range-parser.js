@@ -9,7 +9,8 @@ function arr(type, arr) {
 
 describe('parseRange(len, str)', function(){
   it('should parse range strings', function(){
-    assert(null == parse(200, 'bytes=500-20'));
+    assert(-1 == parse(200, 'bytes=500-20'));
+    assert(-2 == parse(200, 'malformed'));
     parse(200, 'bytes=0-499').should.eql(arr('bytes', [{ start: 0, end: 199 }]));
     parse(1000, 'bytes=0-499').should.eql(arr('bytes', [{ start: 0, end: 499 }]));
     parse(1000, 'bytes=40-80').should.eql(arr('bytes', [{ start: 40, end: 80 }]));
