@@ -26,6 +26,9 @@ module.exports = function(size, str){
       end = size - 1;
     }
 
+    // limit last-byte-pos to current length
+    if (end > size - 1) end = size - 1;
+
     // invalid
     if (isNaN(start)
       || isNaN(end)
