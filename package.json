@@ -2,7 +2,7 @@
   "name": "range-parser",
   "author": "TJ Holowaychuk <tj@vision-media.ca> (http://tjholowaychuk.com)",
   "description": "Range header field string parser",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "repository": { "type": "git", "url": "https://github.com/visionmedia/node-range-parser.git" },
   "main": "index.js",
   "dependencies": {},
