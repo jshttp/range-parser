@@ -8,7 +8,13 @@
 
 Range header field parser.
 
-## Example:
+## Installation
+
+```
+$ npm install range-parser
+```
+
+## Examples
 
 ```js
 assert(-1 == parse(200, 'bytes=500-20'));
@@ -24,12 +30,6 @@ parse(1000, 'bytes=0-0').should.eql(arr('bytes', [{ start: 0, end: 0 }]));
 parse(1000, 'bytes=-1').should.eql(arr('bytes', [{ start: 999, end: 999 }]));
 parse(1000, 'items=0-5').should.eql(arr('items', [{ start: 0, end: 5 }]));
 parse(1000, 'bytes=40-80,-1').should.eql(arr('bytes', [{ start: 40, end: 80 }, { start: 999, end: 999 }]));
-```
-
-## Installation
-
-```
-$ npm install range-parser
 ```
 
 ## License
