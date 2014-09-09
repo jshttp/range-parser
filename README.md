@@ -32,6 +32,10 @@ parse(1000, 'bytes=40-80,-1').should.eql(arr('bytes', [{ start: 40, end: 80 }, {
 $ npm install range-parser
 ```
 
+## License
+
+[MIT](LICENSE)
+
 [npm-image]: https://img.shields.io/npm/v/range-parser.svg?style=flat
 [npm-url]: https://npmjs.org/package/range-parser
 [node-version-image]: https://img.shields.io/badge/node.js-%3E%3D_0.8-brightgreen.svg?style=flat
