@@ -20,6 +20,9 @@
     "LICENSE",
     "index.js"
   ],
+  "engines": {
+    "node": ">= 0.6"
+  },
   "scripts": {
     "test": "mocha --reporter spec --require should",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --require should",
