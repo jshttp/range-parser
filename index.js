@@ -19,12 +19,15 @@ module.exports = function(size, str){
       , start = parseInt(range[0], 10)
       , end = parseInt(range[1], 10);
 
+    var start_is_NaN = isNaN(start)
+    var end_is_NaN = isNaN(end)
+
     // -nnn
-    if (isNaN(start)) {
+    if (start_is_NaN) {
       start = size - end;
       end = size - 1;
     // nnn-
-    } else if (isNaN(end)) {
+    } else if (end_is_NaN) {
       end = size - 1;
     }
 
@@ -32,8 +35,8 @@ module.exports = function(size, str){
     if (end > size - 1) end = size - 1;
 
     // invalid
-    if (isNaN(start)
-      || isNaN(end)
+    if (start_is_NaN
+      || end_is_NaN
       || start > end
       || start < 0) valid = false;
 
