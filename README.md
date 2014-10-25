@@ -14,22 +14,31 @@ Range header field parser.
 $ npm install range-parser
 ```
 
-## Examples
+## API
 
 ```js
-assert(-1 == parse(200, 'bytes=500-20'));
-assert(-2 == parse(200, 'bytes=malformed'));
-parse(200, 'bytes=0-499').should.eql(arr('bytes', [{ start: 0, end: 199 }]));
-parse(1000, 'bytes=0-499').should.eql(arr('bytes', [{ start: 0, end: 499 }]));
-parse(1000, 'bytes=40-80').should.eql(arr('bytes', [{ start: 40, end: 80 }]));
-parse(1000, 'bytes=-500').should.eql(arr('bytes', [{ start: 500, end: 999 }]));
-parse(1000, 'bytes=-400').should.eql(arr('bytes', [{ start: 600, end: 999 }]));
-parse(1000, 'bytes=500-').should.eql(arr('bytes', [{ start: 500, end: 999 }]));
-parse(1000, 'bytes=400-').should.eql(arr('bytes', [{ start: 400, end: 999 }]));
-parse(1000, 'bytes=0-0').should.eql(arr('bytes', [{ start: 0, end: 0 }]));
-parse(1000, 'bytes=-1').should.eql(arr('bytes', [{ start: 999, end: 999 }]));
-parse(1000, 'items=0-5').should.eql(arr('items', [{ start: 0, end: 5 }]));
-parse(1000, 'bytes=40-80,-1').should.eql(arr('bytes', [{ start: 40, end: 80 }, { start: 999, end: 999 }]));
+var parseRange = require('range-parser')
+```
+
+### parseRange(size, header)
+
+Parse the given `header` string where `size` is the maximum size of the resource.
+An array of ranges will be returned or negative numbers indicating an error parsing.
+
+  * `-2` signals a malformed header string
+  * `-1` signals an invalid range
+
+```js
+// parse header from request
+var range = parseRange(req.headers.range)
+
+// the type of the range
+if (range.type === 'bytes') {
+  // the ranges
+  range.forEach(function (r) {
+    // do something with r.start and r.end
+  })
+}
 ```
 
 ## License
