@@ -38,7 +38,7 @@ parse(1000, 'bytes=40-80,-1').should.eql(arr('bytes', [{ start: 40, end: 80 }, {
 
 [npm-image]: https://img.shields.io/npm/v/range-parser.svg?style=flat
 [npm-url]: https://npmjs.org/package/range-parser
-[node-version-image]: https://img.shields.io/badge/node.js-%3E%3D_0.6-brightgreen.svg?style=flat
+[node-version-image]: https://img.shields.io/node/v/range-parser.svg?style=flat
 [node-version-url]: http://nodejs.org/download/
 [travis-image]: https://img.shields.io/travis/jshttp/range-parser.svg?style=flat
 [travis-url]: https://travis-ci.org/jshttp/range-parser
