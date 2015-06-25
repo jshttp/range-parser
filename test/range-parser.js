@@ -2,11 +2,6 @@
 var assert = require('assert')
 var parse = require('..')
 
-function arr(type, arr) {
-  arr.type = type;
-  return arr;
-}
-
 describe('parseRange(len, str)', function(){
   it('should return -2 for invalid str', function(){
     assert.strictEqual(parse(200, 'malformed'), -2)
