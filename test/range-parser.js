@@ -46,6 +46,13 @@ describe('parseRange(len, str)', function(){
     assert.deepEqual(range[0], { start: 400, end: 999 })
   })
 
+  it('should parse "bytes=0-"', function(){
+    var range = parse(1000, 'bytes=0-')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    assert.deepEqual(range[0], { start: 0, end: 999 })
+  })
+
   it('should parse str with no bytes', function(){
     var range = parse(1000, 'bytes=0-0')
     assert.strictEqual(range.type, 'bytes')
