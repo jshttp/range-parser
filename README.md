@@ -45,13 +45,13 @@ if (range.type === 'bytes') {
 
 [MIT](LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/range-parser.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/range-parser.svg
 [npm-url]: https://npmjs.org/package/range-parser
-[node-version-image]: https://img.shields.io/node/v/range-parser.svg?style=flat
+[node-version-image]: https://img.shields.io/node/v/range-parser.svg
 [node-version-url]: http://nodejs.org/download/
-[travis-image]: https://img.shields.io/travis/jshttp/range-parser.svg?style=flat
+[travis-image]: https://img.shields.io/travis/jshttp/range-parser.svg
 [travis-url]: https://travis-ci.org/jshttp/range-parser
-[coveralls-image]: https://img.shields.io/coveralls/jshttp/range-parser.svg?style=flat
+[coveralls-image]: https://img.shields.io/coveralls/jshttp/range-parser.svg
 [coveralls-url]: https://coveralls.io/r/jshttp/range-parser
-[downloads-image]: https://img.shields.io/npm/dm/range-parser.svg?style=flat
+[downloads-image]: https://img.shields.io/npm/dm/range-parser.svg
 [downloads-url]: https://npmjs.org/package/range-parser
