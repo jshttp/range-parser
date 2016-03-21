@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Fix incorrectly returning -1 when there is at least one valid range
+
 1.0.3 / 2015-10-29
 ==================
 

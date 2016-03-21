@@ -7,8 +7,10 @@ describe('parseRange(len, str)', function(){
     assert.strictEqual(parse(200, 'malformed'), -2)
   })
 
-  it('should return -1 for invalid range', function(){
+  it('should return -1 if all specified ranges are invalid', function(){
     assert.strictEqual(parse(200, 'bytes=500-20'), -1)
+    assert.strictEqual(parse(200, 'bytes=500-999'), -1)
+    assert.strictEqual(parse(200, 'bytes=500-999,1000-1499'), -1)
   })
 
   it('should parse str', function(){
@@ -73,6 +75,13 @@ describe('parseRange(len, str)', function(){
     assert.strictEqual(range.length, 2)
     assert.deepEqual(range[0], { start: 40, end: 80 })
     assert.deepEqual(range[1], { start: 999, end: 999 })
+  })
+
+  it('should parse str with some invalid ranges', function(){
+    var range = parse(200, 'bytes=0-499,1000-,500-999')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    assert.deepEqual(range[0], { start: 0, end: 199 })
   })
 
   it('should parse non-byte range', function(){
