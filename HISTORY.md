@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * No longer return `-1` if at least one of the specified ranges is valid
+
 1.0.3 / 2015-10-29
 ==================
 
