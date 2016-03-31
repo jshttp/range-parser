@@ -26,7 +26,7 @@ Parse the given `header` string where `size` is the maximum size of the resource
 An array of ranges will be returned or negative numbers indicating an error parsing.
 
   * `-2` signals a malformed header string
-  * `-1` signals an invalid range
+  * `-1` signals an unsatisfiable range
 
 ```js
 // parse header from request
