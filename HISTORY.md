@@ -1,5 +1,5 @@
-unreleased
-==========
+1.1.0 / 2016-05-13
+==================
 
   * Fix incorrectly returning -1 when there is at least one valid range
   * perf: remove internal function
