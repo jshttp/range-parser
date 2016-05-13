@@ -23,16 +23,24 @@ module.exports = rangeParser
  */
 
 function rangeParser (size, str) {
-  var i = str.indexOf('=')
+  var index = str.indexOf('=')
 
-  if (i === -1) {
+  if (index === -1) {
     return -2
   }
 
-  var arr = str.slice(i + 1).split(',').reduce(function eachRange (memo, range) {
-    var parts = range.split('-')
-    var start = parseInt(parts[0], 10)
-    var end = parseInt(parts[1], 10)
+  // split the range string
+  var arr = str.slice(index + 1).split(',')
+  var ranges = []
+
+  // add ranges type
+  ranges.type = str.slice(0, index)
+
+  // parse all ranges
+  for (var i = 0; i < arr.length; i++) {
+    var range = arr[i].split('-')
+    var start = parseInt(range[0], 10)
+    var end = parseInt(range[1], 10)
 
     // -nnn
     if (isNaN(start)) {
@@ -48,20 +56,17 @@ function rangeParser (size, str) {
       end = size - 1
     }
 
-    // invalid
+    // invalid or unsatisifiable
     if (isNaN(start) || isNaN(end) || start > end || start < 0) {
-      return memo
+      continue
     }
 
-    memo.push({
+    // add range
+    ranges.push({
       start: start,
       end: end
     })
+  }
 
-    return memo
-  }, [])
-
-  arr.type = str.slice(0, i)
-
-  return arr.length ? arr : -1
+  return ranges.length ? ranges : -1
 }
