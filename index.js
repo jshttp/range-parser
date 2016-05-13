@@ -23,12 +23,11 @@ module.exports = rangeParser;
  */
 
 function rangeParser(size, str) {
-  var valid = true;
   var i = str.indexOf('=');
 
   if (-1 == i) return -2;
 
-  var arr = str.slice(i + 1).split(',').map(function(range){
+  var arr = str.slice(i + 1).split(',').reduce(function(memo, range){
     var range = range.split('-')
       , start = parseInt(range[0], 10)
       , end = parseInt(range[1], 10);
@@ -49,15 +48,17 @@ function rangeParser(size, str) {
     if (isNaN(start)
       || isNaN(end)
       || start > end
-      || start < 0) valid = false;
+      || start < 0) return memo;
 
-    return {
+    memo.push({
       start: start,
       end: end
-    };
-  });
+    });
+
+    return memo;
+  }, []);
 
   arr.type = str.slice(0, i);
 
-  return valid ? arr : -1;
+  return arr.length ? arr : -1;
 }
