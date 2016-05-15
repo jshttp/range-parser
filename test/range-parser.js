@@ -70,11 +70,12 @@ describe('parseRange(len, str)', function () {
   })
 
   it('should parse str with multiple ranges', function () {
-    var range = parse(1000, 'bytes=40-80,-1')
+    var range = parse(1000, 'bytes=40-80,81-90,-1')
     assert.strictEqual(range.type, 'bytes')
-    assert.strictEqual(range.length, 2)
+    assert.strictEqual(range.length, 3)
     assert.deepEqual(range[0], { start: 40, end: 80 })
-    assert.deepEqual(range[1], { start: 999, end: 999 })
+    assert.deepEqual(range[1], { start: 81, end: 90 })
+    assert.deepEqual(range[2], { start: 999, end: 999 })
   })
 
   it('should parse str with some invalid ranges', function () {
@@ -89,5 +90,15 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(range.type, 'items')
     assert.strictEqual(range.length, 1)
     assert.deepEqual(range[0], { start: 0, end: 5 })
+  })
+
+  describe('when combine: true', function () {
+    it('should combine overlapping ranges', function () {
+      var range = parse(150, 'bytes=0-4,90-99,5-75,100-199,101-102', { combine: true })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 2)
+      assert.deepEqual(range[0], { start: 0, end: 75 })
+      assert.deepEqual(range[1], { start: 90, end: 149 })
+    })
   })
 })

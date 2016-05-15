@@ -18,11 +18,12 @@ module.exports = rangeParser
  *
  * @param {Number} size
  * @param {String} str
+ * @param {Object} [options]
  * @return {Array}
  * @public
  */
 
-function rangeParser (size, str) {
+function rangeParser (size, str, options) {
   var index = str.indexOf('=')
 
   if (index === -1) {
@@ -68,5 +69,49 @@ function rangeParser (size, str) {
     })
   }
 
-  return ranges.length ? ranges : -1
+  if (ranges.length < 1) {
+    // unsatisifiable
+    return -1
+  }
+
+  return options && options.combine
+    ? combineRanges(ranges)
+    : ranges
+}
+
+/**
+ * Combine overlapping & adjacent ranges.
+ * @private
+ */
+
+function combineRanges (ranges) {
+  var ordered = ranges.slice().sort(sortByRangeStart)
+  var combined = [ordered[0]]
+
+  for (var current = combined[0], i = 1; i < ordered.length; i++) {
+    var range = ordered[i]
+
+    if (range.start > current.end + 1) {
+      // add new range
+      combined.push(range)
+      current = range
+    } else if (range.end > current.end) {
+      // extend range
+      current.end = range.end
+    }
+  }
+
+  // copy ranges type
+  combined.type = ranges.type
+
+  return combined
+}
+
+/**
+ * Sort function to sort ranges by start position.
+ * @private
+ */
+
+function sortByRangeStart (a, b) {
+  return a.start - b.start
 }

@@ -20,7 +20,7 @@ $ npm install range-parser
 var parseRange = require('range-parser')
 ```
 
-### parseRange(size, header)
+### parseRange(size, header, options)
 
 Parse the given `header` string where `size` is the maximum size of the resource.
 An array of ranges will be returned or negative numbers indicating an error parsing.
@@ -39,6 +39,24 @@ if (range.type === 'bytes') {
     // do something with r.start and r.end
   })
 }
+```
+
+#### Options
+
+These properties are accepted in the options object.
+
+##### combine
+
+Specifies if overlapping & adjacent ranges should be combined, defaults to `false`.
+When `true`, ranges will be combined and returned as if they were specified that
+way in the header.
+
+```js
+parseRange(100, 'bytes=50-55,0-10,5-10,56-60', { combine: true })
+// => [
+//      { start: 0,  end: 10 },
+//      { start: 50, end: 60 }
+//    ]
 ```
 
 ## License
