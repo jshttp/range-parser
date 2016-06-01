@@ -1,5 +1,5 @@
-unreleased
-==========
+1.2.0 / 2016-06-01
+==================
 
   * Add `combine` option to combine overlapping ranges
 
