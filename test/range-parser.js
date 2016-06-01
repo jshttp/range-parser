@@ -100,5 +100,14 @@ describe('parseRange(len, str)', function () {
       assert.deepEqual(range[0], { start: 0, end: 75 })
       assert.deepEqual(range[1], { start: 90, end: 149 })
     })
+
+    it('should retain original order', function () {
+      var range = parse(150, 'bytes=-1,20-100,0-1,101-120', { combine: true })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 3)
+      assert.deepEqual(range[0], { start: 149, end: 149 })
+      assert.deepEqual(range[1], { start: 20, end: 120 })
+      assert.deepEqual(range[2], { start: 0, end: 1 })
+    })
   })
 })

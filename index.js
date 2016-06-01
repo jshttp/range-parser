@@ -85,26 +85,66 @@ function rangeParser (size, str, options) {
  */
 
 function combineRanges (ranges) {
-  var ordered = ranges.slice().sort(sortByRangeStart)
-  var combined = [ordered[0]]
+  var ordered = ranges.map(mapWithIndex).sort(sortByRangeStart)
 
-  for (var current = combined[0], i = 1; i < ordered.length; i++) {
+  for (var j = 0, i = 1; i < ordered.length; i++) {
     var range = ordered[i]
+    var current = ordered[j]
 
     if (range.start > current.end + 1) {
-      // add new range
-      combined.push(range)
-      current = range
+      // next range
+      ordered[++j] = range
     } else if (range.end > current.end) {
       // extend range
       current.end = range.end
+      current.index = Math.min(current.index, range.index)
     }
   }
+
+  // trim ordered array
+  ordered.length = j + 1
+
+  // generate combined range
+  var combined = ordered.sort(sortByRangeIndex).map(mapWithoutIndex)
 
   // copy ranges type
   combined.type = ranges.type
 
   return combined
+}
+
+/**
+ * Map function to add index value to ranges.
+ * @private
+ */
+
+function mapWithIndex (range, index) {
+  return {
+    start: range.start,
+    end: range.end,
+    index: index
+  }
+}
+
+/**
+ * Map function to remove index value from ranges.
+ * @private
+ */
+
+function mapWithoutIndex (range) {
+  return {
+    start: range.start,
+    end: range.end
+  }
+}
+
+/**
+ * Sort function to sort ranges by index.
+ * @private
+ */
+
+function sortByRangeIndex (a, b) {
+  return a.index - b.index
 }
 
 /**
