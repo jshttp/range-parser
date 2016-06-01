@@ -30,7 +30,7 @@ An array of ranges will be returned or negative numbers indicating an error pars
 
 ```js
 // parse header from request
-var range = parseRange(req.headers.range)
+var range = parseRange(size, req.headers.range)
 
 // the type of the range
 if (range.type === 'bytes') {
