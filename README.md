@@ -20,6 +20,8 @@ $ npm install range-parser
 
 ## API
 
+<!-- eslint-disable no-unused-vars -->
+
 ```js
 var parseRange = require('range-parser')
 ```
@@ -31,6 +33,8 @@ An array of ranges will be returned or negative numbers indicating an error pars
 
   * `-2` signals a malformed header string
   * `-1` signals an unsatisfiable range
+
+<!-- eslint-disable no-undef -->
 
 ```js
 // parse header from request
@@ -54,6 +58,8 @@ These properties are accepted in the options object.
 Specifies if overlapping & adjacent ranges should be combined, defaults to `false`.
 When `true`, ranges will be combined and returned as if they were specified that
 way in the header.
+
+<!-- eslint-disable no-undef -->
 
 ```js
 parseRange(100, 'bytes=50-55,0-10,5-10,56-60', { combine: true })
