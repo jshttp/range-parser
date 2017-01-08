@@ -76,7 +76,7 @@ parseRange(100, 'bytes=50-55,0-10,5-10,56-60', { combine: true })
 [npm-image]: https://img.shields.io/npm/v/range-parser.svg
 [npm-url]: https://npmjs.org/package/range-parser
 [node-version-image]: https://img.shields.io/node/v/range-parser.svg
-[node-version-url]: https://nodejs.org/endownload
+[node-version-url]: https://nodejs.org/en/download
 [travis-image]: https://img.shields.io/travis/jshttp/range-parser.svg
 [travis-url]: https://travis-ci.org/jshttp/range-parser
 [coveralls-image]: https://img.shields.io/coveralls/jshttp/range-parser.svg
