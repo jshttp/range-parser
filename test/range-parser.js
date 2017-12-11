@@ -3,6 +3,11 @@ var assert = require('assert')
 var parse = require('..')
 
 describe('parseRange(len, str)', function () {
+  it('should reject non-string str', function () {
+    assert.throws(parse.bind(null, 200, {}),
+      /TypeError: argument str must be a string/)
+  })
+
   it('should return -2 for invalid str', function () {
     assert.strictEqual(parse(200, 'malformed'), -2)
   })

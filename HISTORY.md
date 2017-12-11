@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Improve error when `str` is not a string
+
 1.2.0 / 2016-06-01
 ==================
 
