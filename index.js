@@ -14,6 +14,9 @@
 
 module.exports = rangeParser
 
+rangeParser.combineRanges = combineRanges
+rangeParser.rangeParser   = rangeParser
+
 /**
  * Parse "Range" header `str` relative to the given file `size`.
  *
