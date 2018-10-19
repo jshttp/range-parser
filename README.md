@@ -69,6 +69,21 @@ parseRange(100, 'bytes=50-55,0-10,5-10,56-60', { combine: true })
 //    ]
 ```
 
+##### limit
+
+Specifies total size for open ranges like `bytes=50-`, defaults not applyed.
+When used, end range part will be limited with selected value, this behavior allowed at RFC.
+Limit may be used to reduce load by greedy client.
+
+<!-- eslint-disable no-undef -->
+
+```js
+parseRange(1000, 'bytes=20-', { limit: 300 })
+// => [
+//      { start: 20,  end: 320 }
+//    ]
+```
+
 ## License
 
 [MIT](LICENSE)
