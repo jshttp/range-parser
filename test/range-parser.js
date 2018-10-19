@@ -115,4 +115,52 @@ describe('parseRange(len, str)', function () {
       assert.deepEqual(range[2], { start: 0, end: 1 })
     })
   })
+
+  describe('when limit: used', function () {
+    it('should limit end on "bytes=0-"', function () {
+      var range = parse(1000, 'bytes=0-', { limit: 300 })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 1)
+      assert.deepEqual(range[0], { start: 0, end: 300 })
+    })
+
+    it('should not apply on fully defined range "bytes=0-200"', function () {
+      var range = parse(1000, 'bytes=0-200', { limit: 500 })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 1)
+      assert.deepEqual(range[0], { start: 0, end: 200 })
+    })
+
+    it('should not apply on last bytes request "bytes=-200"', function () {
+      var range = parse(1000, 'bytes=-200', { limit: 500 })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 1)
+      assert.deepEqual(range[0], { start: 800, end: 999 })
+    })
+
+    it('should consider end at size', function () {
+      var range = parse(1000, 'bytes=800-', { limit: 500 })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 1)
+      assert.deepEqual(range[0], { start: 800, end: 999 })
+    })
+
+    it('should support multi ranges without combine:', function () {
+      var range = parse(1000, 'bytes=0-,20-120,100-,-200', { limit: 100 })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 4)
+      assert.deepEqual(range[0], { start: 0, end: 100 })
+      assert.deepEqual(range[1], { start: 20, end: 120 })
+      assert.deepEqual(range[2], { start: 100, end: 200 })
+      assert.deepEqual(range[3], { start: 800, end: 999 })
+    })
+
+    it('should support multi ranges with combine:', function () {
+      var range = parse(1000, 'bytes=0-,20-120,100-,-200', { combine: true, limit: 100 })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 2)
+      assert.deepEqual(range[0], { start: 0, end: 200 })
+      assert.deepEqual(range[1], { start: 800, end: 999 })
+    })
+  })
 })
