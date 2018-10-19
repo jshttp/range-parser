@@ -54,7 +54,12 @@ function rangeParser (size, str, options) {
       end = size - 1
     // nnn-
     } else if (isNaN(end)) {
-      end = size - 1
+      // used limit options for open ranges
+      if (options && options.limit) {
+        end = start + options.limit
+      } else {
+        end = size - 1
+      }
     }
 
     // limit last-byte-pos to current length
