@@ -1,5 +1,5 @@
-unreleased
-==========
+1.2.1 / 2019-05-10
+==================
 
   * Improve error when `str` is not a string
 
