@@ -28,8 +28,9 @@ var parseRange = require('range-parser')
 
 ### parseRange(size, header, options)
 
-Parse the given `header` string where `size` is the maximum size of the resource.
-An array of ranges will be returned or negative numbers indicating an error parsing.
+Parse the given `header` string where `size` is the size of the selected
+representation that is to be partitioned into subranges. An array of subranges
+will be returned or negative numbers indicating an error parsing.
 
   * `-2` signals a malformed header string
   * `-1` signals an unsatisfiable range
@@ -38,12 +39,12 @@ An array of ranges will be returned or negative numbers indicating an error pars
 
 ```js
 // parse header from request
-var range = parseRange(size, req.headers.range)
+var subranges = parseRange(size, req.headers.range)
 
-// the type of the range
-if (range.type === 'bytes') {
+// the type of the subranges
+if (subranges.type === 'bytes') {
   // the ranges
-  range.forEach(function (r) {
+  subranges.forEach(function (r) {
     // do something with r.start and r.end
   })
 }
@@ -55,9 +56,9 @@ These properties are accepted in the options object.
 
 ##### combine
 
-Specifies if overlapping & adjacent ranges should be combined, defaults to `false`.
-When `true`, ranges will be combined and returned as if they were specified that
-way in the header.
+Specifies if overlapping & adjacent subranges should be combined, defaults to
+`false`. When `true`, ranges will be combined and returned as if they were
+specified that way in the header.
 
 <!-- eslint-disable no-undef -->
 
