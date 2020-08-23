@@ -3,7 +3,7 @@
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Downloads][npm-downloads-image]][npm-url]
 [![Node.js Version][node-image]][node-url]
-[![Build Status][travis-image]][travis-url]
+[![Build Status][ci-image]][ci-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 
 Range header field parser.
@@ -74,6 +74,8 @@ parseRange(100, 'bytes=50-55,0-10,5-10,56-60', { combine: true })
 
 [MIT](LICENSE)
 
+[ci-image]: https://badgen.net/github/checks/jshttp/range-parser/master?label=ci
+[ci-url]: https://github.com/jshttp/range-parser/actions/workflows/ci.yml
 [coveralls-image]: https://badgen.net/coveralls/c/github/jshttp/range-parser/master
 [coveralls-url]: https://coveralls.io/r/jshttp/range-parser?branch=master
 [node-image]: https://badgen.net/npm/node/range-parser
@@ -81,5 +83,3 @@ parseRange(100, 'bytes=50-55,0-10,5-10,56-60', { combine: true })
 [npm-downloads-image]: https://badgen.net/npm/dm/range-parser
 [npm-url]: https://npmjs.org/package/range-parser
 [npm-version-image]: https://badgen.net/npm/v/range-parser
-[travis-image]: https://badgen.net/travis/jshttp/range-parser/master
-[travis-url]: https://travis-ci.org/jshttp/range-parser
