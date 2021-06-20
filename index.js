@@ -110,7 +110,7 @@ function combineRanges (ranges) {
   ordered.length = j + 1
 
   // generate combined range
-  var combined = ordered.sort(sortByRangeIndex).map(mapWithoutIndex)
+  var combined = ordered.sort(sortByRangeIndex).map(mapWithIndex)
 
   // copy ranges type
   combined.type = ranges.type
@@ -128,18 +128,6 @@ function mapWithIndex (range, index) {
     start: range.start,
     end: range.end,
     index: index
-  }
-}
-
-/**
- * Map function to remove index value from ranges.
- * @private
- */
-
-function mapWithoutIndex (range) {
-  return {
-    start: range.start,
-    end: range.end
   }
 }
 
