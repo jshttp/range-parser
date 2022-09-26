@@ -50,10 +50,17 @@ function rangeParser (size, str, options) {
 
     // -nnn
     if (isNaN(start)) {
+      if (range[0].length > 0) {
+        return -2
+      }
+
       start = size - end
       end = size - 1
     // nnn-
     } else if (isNaN(end)) {
+      if (range[1].length > 0) {
+        return -2
+      }
       end = size - 1
     }
 

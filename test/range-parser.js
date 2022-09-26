@@ -13,6 +13,14 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'malformed'), -2)
   })
 
+  it('should return -2 for invalid start byte position', function () {
+    assert.strictEqual(parse(200, 'bytes=x-100'), -2)
+  })
+
+  it('should return -2 for invalid end byte position', function () {
+    assert.strictEqual(parse(200, 'bytes=100-x'), -2)
+  })
+
   it('should return -1 if all specified ranges are invalid', function () {
     assert.strictEqual(parse(200, 'bytes=500-20'), -1)
     assert.strictEqual(parse(200, 'bytes=500-999'), -1)
