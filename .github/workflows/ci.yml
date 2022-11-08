@@ -90,6 +90,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Update nvm
+      run: cd "$NVM_DIR" && git fetch --tags && git checkout -f v0.36.0
+
     - name: Install Node.js ${{ matrix.node-version }}
       shell: bash -eo pipefail -l {0}
       run: |
@@ -98,7 +101,6 @@ jobs:
           export CC=/usr/bin/gcc-4.8
           export CXX=/usr/bin/g++-4.8
         fi
-        rm -rf "$NVM_DIR" && mkdir "$NVM_DIR" && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
         nvm install --default ${{ matrix.node-version }}
         if [[ "${{ matrix.node-version }}" == 0.* && "$(cut -d. -f2 <<< "${{ matrix.node-version }}")" -lt 10 ]]; then
           nvm install --alias=npm 0.10
