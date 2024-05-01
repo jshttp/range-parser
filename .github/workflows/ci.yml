@@ -26,6 +26,16 @@ jobs:
         - Node.js 10.x
         - Node.js 11.x
         - Node.js 12.x
+        - Node.js 13.x
+        - Node.js 14.x
+        - Node.js 15.x
+        - Node.js 16.x
+        - Node.js 17.x
+        - Node.js 18.x
+        - Node.js 19.x
+        - Node.js 20.x
+        - Node.js 21.x
+        - Node.js 22.x
 
         include:
         - name: Node.js 0.6
@@ -94,6 +104,37 @@ jobs:
           node-version: "12.22"
           npm-i: mocha@9.2.2
 
+        - name: Node.js 13.x
+          node-version: "13.14"
+          npm-i: mocha@9.2.2
+
+        - name: Node.js 14.x
+          node-version: "14.21"
+
+        - name: Node.js 15.x
+          node-version: "15.14"
+
+        - name: Node.js 16.x
+          node-version: "16.20"
+
+        - name: Node.js 17.x
+          node-version: "17.9"
+
+        - name: Node.js 18.x
+          node-version: "18.18"
+
+        - name: Node.js 19.x
+          node-version: "19.9"
+
+        - name: Node.js 20.x
+          node-version: "20.9"
+
+        - name: Node.js 21.x
+          node-version: "21.7"
+
+        - name: Node.js 22.x
+          node-version: "22.0"
+
     steps:
     - uses: actions/checkout@v2
 
@@ -120,7 +161,12 @@ jobs:
         dirname "$(nvm which ${{ matrix.node-version }})" >> "$GITHUB_PATH"
 
     - name: Configure npm
-      run: npm config set shrinkwrap false
+      run: |
+        if [[ "$(npm config get package-lock)" == "true" ]]; then
+          npm config set package-lock false
+        else
+          npm config set shrinkwrap false
+        fi
 
     - name: Remove npm module(s) ${{ matrix.npm-rm }}
       run: npm rm --silent --save-dev ${{ matrix.npm-rm }}
