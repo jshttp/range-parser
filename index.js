@@ -52,8 +52,8 @@ function rangeParser (size, str, options) {
     var startStr = arr[i].slice(0, indexOf).trim()
     var endStr = arr[i].slice(indexOf + 1).trim()
 
-    var start = parseInt(startStr, 10)
-    var end = parseInt(endStr, 10)
+    var start = parsePos(startStr)
+    var end = parsePos(endStr)
 
     if (startStr.length === 0) {
       start = size - end
@@ -98,7 +98,7 @@ function rangeParser (size, str, options) {
  * @private
  */
 
-function parseInt (str) {
+function parsePos (str) {
   if (/^\d+$/.test(str)) return Number(str)
   return NaN
 }
