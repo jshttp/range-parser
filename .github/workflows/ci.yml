@@ -205,10 +205,6 @@ jobs:
           npm test
         fi
 
-    - name: Run type tests
-      if: steps.list_env.outputs.typescript != ''
-      run: npm run test-types
-
     - name: Lint code
       if: steps.list_env.outputs.eslint != ''
       run: npm run lint
@@ -232,3 +228,19 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         parallel-finished: true
+  
+  test_typescript:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+
+      - name: Install
+        run: |
+          npm install --ignore-scripts
+
+      - name: Run typescript tests
+        run: npm run test-types
