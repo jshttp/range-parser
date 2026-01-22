@@ -76,6 +76,8 @@ jobs:
         - name: Node.js 5.x
           node-version: "5.12"
           npm-i: mocha@5.2.0 nyc@11.9.0
+          # fixes https://github.com/npm/cli/issues/681
+          npm-version: "npm@3.10.10"
 
         - name: Node.js 6.x
           node-version: "6.17"
@@ -155,6 +157,10 @@ jobs:
           npm config set strict-ssl false
         fi
         dirname "$(nvm which ${{ matrix.node-version }})" >> "$GITHUB_PATH"
+
+    - name: Npm version fixes
+      if: ${{matrix.npm-version != ''}}
+      run: npm install -g ${{ matrix.npm-version }}
 
     - name: Configure npm
       run: |
