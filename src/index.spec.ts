@@ -6,6 +6,11 @@ describe("parse(len, str)", function () {
     assert.strictEqual(parse(200, "malformed"), -2);
   });
 
+  it("should return -2 for missing bytes", function () {
+    assert.strictEqual(parse(200, "bytes="), -2);
+    assert.strictEqual(parse(200, "bytes= "), -2);
+  });
+
   it("should return -2 for invalid start byte position", function () {
     assert.strictEqual(parse(200, "bytes=x-100"), -2);
   });
