@@ -205,6 +205,9 @@ jobs:
           npm test
         fi
 
+    - name: Run type tests
+      run: npm run test-types
+
     - name: Lint code
       if: steps.list_env.outputs.eslint != ''
       run: npm run lint
