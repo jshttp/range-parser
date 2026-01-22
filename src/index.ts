@@ -40,7 +40,7 @@ export function parse(size: number, str: string): Result | -1 | -2 {
   let index = eqIndex + 1;
   let valid = false;
 
-  while (index < len) {
+  do {
     const commaIndex = str.indexOf(",", index);
     const endIndex = commaIndex !== -1 ? commaIndex : len;
     const dashIndex = str.indexOf("-", index);
@@ -95,7 +95,7 @@ export function parse(size: number, str: string): Result | -1 | -2 {
       start: start,
       end: end,
     });
-  }
+  } while (index < len);
 
   if (ranges.length < 1) {
     // unsatisfiable
