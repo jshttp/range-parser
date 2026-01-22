@@ -47,7 +47,7 @@ jobs:
         - name: Node.js 0.8
           node-version: "0.8"
           npm-i: mocha@2.5.3
-          npm-rm: nyc
+          npm-rm: nyc typescript @arethetypeswrong/cli expect-type
 
         - name: Node.js 0.10
           node-version: "0.10"
@@ -206,6 +206,7 @@ jobs:
         fi
 
     - name: Run type tests
+      if: steps.list_env.outputs.typescript != ''
       run: npm run test-types
 
     - name: Lint code
