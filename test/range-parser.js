@@ -21,6 +21,34 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'bytes=100-x'), -2)
   })
 
+  it('should return -2 for invalid range format', function () {
+    assert.strictEqual(parse(200, 'bytes=--100'), -2)
+    assert.strictEqual(parse(200, 'bytes=100--200'), -2)
+    assert.strictEqual(parse(200, 'bytes=-'), -2)
+    assert.strictEqual(parse(200, 'bytes= - '), -2)
+  })
+
+  it('should return -2 with multiple dashes in range', function () {
+    assert.strictEqual(parse(200, 'bytes=100-200-300'), -2)
+  })
+
+  it('should return -2 for negative start byte position', function () {
+    assert.strictEqual(parse(200, 'bytes=-100-150'), -2)
+  })
+
+  it('should return -2 for invalid number format', function () {
+    assert.strictEqual(parse(200, 'bytes=01a-150'), -2)
+    assert.strictEqual(parse(200, 'bytes=100-15b0'), -2)
+  })
+
+  it('should return -1 for unsatisfiable range', function () {
+    assert.strictEqual(parse(200, 'bytes=500-600'), -1)
+  })
+
+  it('should return -1 for unsatisfiable range with multiple ranges', function () {
+    assert.strictEqual(parse(200, 'bytes=500-600,601-700'), -1)
+  })
+
   it('should return -1 if all specified ranges are invalid', function () {
     assert.strictEqual(parse(200, 'bytes=500-20'), -1)
     assert.strictEqual(parse(200, 'bytes=500-999'), -1)
@@ -97,6 +125,15 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(range.type, 'bytes')
     assert.strictEqual(range.length, 1)
     deepEqual(range[0], { start: 0, end: 199 })
+  })
+
+  it('should parse str with whitespace', function () {
+    var range = parse(1000, 'bytes=   40-80 , 81-90 , -1 ')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 3)
+    deepEqual(range[0], { start: 40, end: 80 })
+    deepEqual(range[1], { start: 81, end: 90 })
+    deepEqual(range[2], { start: 999, end: 999 })
   })
 
   it('should parse non-byte range', function () {

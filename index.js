@@ -44,24 +44,21 @@ function rangeParser (size, str, options) {
 
   // parse all ranges
   for (var i = 0; i < arr.length; i++) {
-    var range = arr[i].split('-')
-    var start = parseInt(range[0], 10)
-    var end = parseInt(range[1], 10)
+    var indexOf = arr[i].indexOf('-')
+    if (indexOf === -1) {
+      return -2
+    }
 
-    // -nnn
-    if (isNaN(start)) {
-      if (range[0].length > 0) {
-        return -2
-      }
+    var startStr = arr[i].slice(0, indexOf).trim()
+    var endStr = arr[i].slice(indexOf + 1).trim()
 
+    var start = parsePos(startStr)
+    var end = parsePos(endStr)
+
+    if (startStr.length === 0) {
       start = size - end
       end = size - 1
-    // nnn-
-    } else if (isNaN(end)) {
-      if (range[1].length > 0) {
-        return -2
-      }
-
+    } else if (endStr.length === 0) {
       end = size - 1
     }
 
@@ -70,8 +67,12 @@ function rangeParser (size, str, options) {
       end = size - 1
     }
 
+    if (isNaN(start) || isNaN(end)) {
+      return -2
+    }
+
     // invalid or unsatisifiable
-    if (isNaN(start) || isNaN(end) || start > end || start < 0) {
+    if (start > end || start < 0) {
       continue
     }
 
@@ -90,6 +91,16 @@ function rangeParser (size, str, options) {
   return options && options.combine
     ? combineRanges(ranges)
     : ranges
+}
+
+/**
+ * Parse string to integer.
+ * @private
+ */
+
+function parsePos (str) {
+  if (/^\d+$/.test(str)) return Number(str)
+  return NaN
 }
 
 /**
