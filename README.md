@@ -10,56 +10,45 @@ Range header field parser.
 
 ## Installation
 
-This is a [Node.js](https://nodejs.org/en/) module available through the
-[npm registry](https://www.npmjs.com/). Installation is done using the
-[`npm install` command](https://docs.npmjs.com/getting-started/installing-npm-packages-locally):
-
 ```sh
 $ npm install range-parser
 ```
 
 ## API
 
-<!-- eslint-disable no-unused-vars -->
-
 ```js
-var parseRange = require("range-parser");
+import { parse, combineRanges } from "range-parser";
 ```
 
-### parseRange(size, header, options)
+### `parse(size, header)`
 
 Parse the given `header` string where `size` is the size of the selected
-representation that is to be partitioned into subranges. An array of subranges
-will be returned or negative numbers indicating an error parsing.
+representation that is to be partitioned into subranges. A type and an array of
+subranges will be returned or negative numbers indicating an error parsing.
 
 - `-2` signals a malformed header string
 - `-1` signals an unsatisfiable range
 
 ```js
 // parse header from request
-var subranges = parseRange(size, req.headers.range);
+var subranges = parse(size, req.headers.range);
 
 // the type of the subranges
 if (subranges.type === "bytes") {
   // the ranges
-  subranges.forEach(function (r) {
+  subranges.ranges.forEach(function (r) {
     // do something with r.start and r.end
   });
 }
 ```
 
-#### Options
+### `combineRanges(ranges)`
 
-These properties are accepted in the options object.
-
-##### combine
-
-Specifies if overlapping & adjacent subranges should be combined, defaults to
-`false`. When `true`, ranges will be combined and returned as if they were
-specified that way in the header.
+Overlapping & adjacent ranges will be combined and returned.
 
 ```js
-parseRange(100, "bytes=50-55,0-10,5-10,56-60", { combine: true });
+const { ranges } = parseRange(100, "bytes=50-55,0-10,5-10,56-60");
+combineRanges(ranges);
 // => [
 //      { start: 0,  end: 10 },
 //      { start: 50, end: 60 }
