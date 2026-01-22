@@ -1,16 +1,14 @@
 import { describe, it, assert } from "vitest";
-import parse from "./index";
+import { parse, combineRanges } from "./index";
 
-describe("parseRange(len, str)", function () {
-  it("should reject non-string str", function () {
-    assert.throws(
-      parse.bind(null, 200, {} as any),
-      /argument str must be a string/,
-    );
-  });
-
+describe("parse(len, str)", function () {
   it("should return -2 for invalid str", function () {
     assert.strictEqual(parse(200, "malformed"), -2);
+  });
+
+  it("should return -2 for missing bytes", function () {
+    assert.strictEqual(parse(200, "bytes="), -2);
+    assert.strictEqual(parse(200, "bytes= "), -2);
   });
 
   it("should return -2 for invalid start byte position", function () {
@@ -57,125 +55,135 @@ describe("parseRange(len, str)", function () {
 
   it("should parse str", function () {
     var range = parse(1000, "bytes=0-499");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 0, end: 499 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 0, end: 499 }],
+    });
   });
 
   it("should cap end at size", function () {
     var range = parse(200, "bytes=0-499");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 0, end: 199 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 0, end: 199 }],
+    });
   });
 
   it("should parse str", function () {
     var range = parse(1000, "bytes=40-80");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 40, end: 80 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 40, end: 80 }],
+    });
   });
 
   it("should parse str asking for last n bytes", function () {
     var range = parse(1000, "bytes=-400");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 600, end: 999 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 600, end: 999 }],
+    });
   });
 
   it("should parse str with only start", function () {
     var range = parse(1000, "bytes=400-");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 400, end: 999 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 400, end: 999 }],
+    });
   });
 
   it('should parse "bytes=0-"', function () {
     var range = parse(1000, "bytes=0-");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 0, end: 999 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 0, end: 999 }],
+    });
   });
 
   it("should parse str with no bytes", function () {
     var range = parse(1000, "bytes=0-0");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 0, end: 0 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 0, end: 0 }],
+    });
   });
 
   it("should parse str asking for last byte", function () {
     var range = parse(1000, "bytes=-1");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 999, end: 999 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 999, end: 999 }],
+    });
   });
 
   it("should parse str with multiple ranges", function () {
     var range = parse(1000, "bytes=40-80,81-90,-1");
-    assert.deepEqual(
-      range,
-      Object.assign(
-        [
-          { start: 40, end: 80 },
-          { start: 81, end: 90 },
-          { start: 999, end: 999 },
-        ],
-        { type: "bytes" },
-      ),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [
+        { start: 40, end: 80 },
+        { start: 81, end: 90 },
+        { start: 999, end: 999 },
+      ],
+    });
   });
 
   it("should parse str with some invalid ranges", function () {
     var range = parse(200, "bytes=0-499,1000-,500-999");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 0, end: 199 }], { type: "bytes" }),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [{ start: 0, end: 199 }],
+    });
   });
 
   it("should parse str with whitespace", function () {
     var range = parse(1000, "bytes=   40-80 , 81-90 , -1 ");
-    assert.deepEqual(
-      range,
-      Object.assign(
-        [
-          { start: 40, end: 80 },
-          { start: 81, end: 90 },
-          { start: 999, end: 999 },
-        ],
-        { type: "bytes" },
-      ),
-    );
+    assert.deepEqual(range, {
+      type: "bytes",
+      ranges: [
+        { start: 40, end: 80 },
+        { start: 81, end: 90 },
+        { start: 999, end: 999 },
+      ],
+    });
   });
 
   it("should parse non-byte range", function () {
     var range = parse(1000, "items=0-5");
-    assert.deepEqual(
-      range,
-      Object.assign([{ start: 0, end: 5 }], { type: "items" }),
-    );
+    assert.deepEqual(range, {
+      type: "items",
+      ranges: [{ start: 0, end: 5 }],
+    });
+  });
+});
+
+describe("combineRanges(ranges)", function () {
+  it("should combine overlapping ranges", function () {
+    var combined = combineRanges([
+      { start: 0, end: 4 },
+      { start: 90, end: 99 },
+      { start: 5, end: 75 },
+      { start: 100, end: 199 },
+      { start: 101, end: 102 },
+    ]);
+    assert.deepEqual(combined, [
+      { start: 0, end: 75 },
+      { start: 90, end: 199 },
+    ]);
   });
 
-  describe("when combine: true", function () {
-    it("should combine overlapping ranges", function () {
-      var range = parse(150, "bytes=0-4,90-99,5-75,100-199,101-102", {
-        combine: true,
-      });
-      assert.deepEqual(range, parse(150, "bytes=0-75,90-149"));
-    });
-
-    it("should retain original order", function () {
-      var range = parse(150, "bytes=-1,20-100,0-1,101-120", { combine: true });
-      assert.deepEqual(range, parse(150, "bytes=149-149,20-120,0-1"));
-    });
+  it("should retain original order", function () {
+    var combined = combineRanges([
+      { start: 149, end: 149 },
+      { start: 20, end: 100 },
+      { start: 0, end: 1 },
+      { start: 101, end: 120 },
+    ]);
+    assert.deepEqual(combined, [
+      { start: 149, end: 149 },
+      { start: 20, end: 120 },
+      { start: 0, end: 1 },
+    ]);
   });
 });

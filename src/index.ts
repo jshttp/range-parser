@@ -5,28 +5,20 @@
  * MIT Licensed
  */
 
-"use strict";
+/**
+ * Range object contains normalized start and end positions.
+ */
+export interface Range {
+  start: number;
+  end: number;
+}
 
 /**
- * Module exports.
- * @public
+ * Result object contains type and array of Range objects.
  */
-
-export = rangeParser;
-
-namespace rangeParser {
-  export interface Range {
-    start: number;
-    end: number;
-  }
-
-  export interface Result extends Array<Range> {
-    type: string;
-  }
-
-  export interface Options {
-    combine?: boolean;
-  }
+export interface Result {
+  type: string;
+  ranges: Range[];
 }
 
 /**
@@ -38,89 +30,92 @@ namespace rangeParser {
  * @return {Array}
  * @public
  */
+export function parse(size: number, str: string): Result | -1 | -2 {
+  const eqIndex = str.indexOf("=");
+  if (eqIndex === -1) return -2;
 
-function rangeParser(size: number, str: string, options?: rangeParser.Options) {
-  if (typeof str !== "string") {
-    throw new TypeError("argument str must be a string");
-  }
+  const ranges: Range[] = [];
+  const type = str.slice(0, eqIndex);
+  const len = str.length;
+  let index = eqIndex + 1;
 
-  var index = str.indexOf("=");
+  do {
+    const commaIndex = str.indexOf(",", index);
+    const endIndex = commaIndex !== -1 ? commaIndex : len;
+    const dashIndex = str.indexOf("-", index);
 
-  if (index === -1) {
-    return -2;
-  }
-
-  // split the range string
-  var arr = str.slice(index + 1).split(",");
-  var ranges: rangeParser.Result = Object.assign([], {
-    type: str.slice(0, index),
-  });
-
-  // parse all ranges
-  for (var i = 0; i < arr.length; i++) {
-    var indexOf = arr[i].indexOf("-");
-    if (indexOf === -1) {
+    if (dashIndex === -1 || dashIndex > endIndex) {
       return -2;
     }
 
-    var startStr = arr[i].slice(0, indexOf).trim();
-    var endStr = arr[i].slice(indexOf + 1).trim();
+    // handle ows around numbers
+    let startStrIndex = index;
+    let endStrIndex = endIndex;
+    while (str.charCodeAt(startStrIndex) === 32) startStrIndex++;
+    while (str.charCodeAt(endStrIndex - 1) === 32) endStrIndex--;
 
-    var start = parsePos(startStr);
-    var end = parsePos(endStr);
+    let start = NaN;
+    let end = NaN;
 
-    if (startStr.length === 0) {
-      start = size - end;
+    if (startStrIndex === dashIndex) {
+      if (endStrIndex === dashIndex + 1) return -2; // just "-" is not valid
+
+      // suffix-byte-range-spec, e.g. "-500"
+      start = size - parsePos(str, dashIndex + 1, endStrIndex);
       end = size - 1;
-    } else if (endStr.length === 0) {
-      end = size - 1;
+    } else {
+      start = parsePos(str, startStrIndex, dashIndex);
+      if (endStrIndex === dashIndex + 1) {
+        // open-ended range, e.g. "9500-"
+        end = size - 1;
+      } else {
+        end = parsePos(str, dashIndex + 1, endStrIndex);
+        if (end > size - 1) end = size - 1;
+      }
     }
 
-    // limit last-byte-pos to current length
-    if (end > size - 1) {
-      end = size - 1;
-    }
+    index = endIndex + 1;
 
     if (isNaN(start) || isNaN(end)) {
       return -2;
     }
 
-    // invalid or unsatisifiable
+    // invalid or unsatisfiable
     if (start > end || start < 0) {
       continue;
     }
 
-    // add range
     ranges.push({
       start: start,
       end: end,
     });
-  }
+  } while (index < len);
 
   if (ranges.length < 1) {
-    // unsatisifiable
+    // unsatisfiable
     return -1;
   }
 
-  return options && options.combine ? combineRanges(ranges) : ranges;
+  return { type, ranges };
 }
 
 /**
  * Parse string to integer.
  * @private
  */
+function parsePos(str: string, start: number, end: number): number {
+  for (let i = start; i < end; i++) {
+    const code = str.charCodeAt(i);
+    if (code < 48 || code > 57) return NaN; // not a digit
+  }
 
-function parsePos(str: string) {
-  if (/^\d+$/.test(str)) return Number(str);
-  return NaN;
+  return Number(str.slice(start, end));
 }
 
 /**
  * Combine overlapping & adjacent ranges.
- * @private
  */
-
-function combineRanges(ranges: rangeParser.Result): rangeParser.Result {
+export function combineRanges(ranges: Range[]): Range[] {
   var ordered = ranges.map(mapWithIndex).sort(sortByRangeStart);
 
   for (var j = 0, i = 1; i < ordered.length; i++) {
@@ -140,16 +135,10 @@ function combineRanges(ranges: rangeParser.Result): rangeParser.Result {
   // trim ordered array
   ordered.length = j + 1;
 
-  // generate combined range
-  var combined = Object.assign(
-    ordered.sort(sortByRangeIndex).map(mapWithoutIndex),
-    { type: ranges.type },
-  );
-
-  return combined;
+  return ordered.sort(sortByRangeIndex).map(mapWithoutIndex);
 }
 
-interface RangeWithIndex extends rangeParser.Range {
+interface RangeWithIndex extends Range {
   index: number;
 }
 
@@ -157,8 +146,7 @@ interface RangeWithIndex extends rangeParser.Range {
  * Map function to add index value to ranges.
  * @private
  */
-
-function mapWithIndex(range: rangeParser.Range, index: number): RangeWithIndex {
+function mapWithIndex(range: Range, index: number): RangeWithIndex {
   return {
     start: range.start,
     end: range.end,
@@ -170,8 +158,7 @@ function mapWithIndex(range: rangeParser.Range, index: number): RangeWithIndex {
  * Map function to remove index value from ranges.
  * @private
  */
-
-function mapWithoutIndex(range: rangeParser.Range): rangeParser.Range {
+function mapWithoutIndex(range: Range): Range {
   return {
     start: range.start,
     end: range.end,
@@ -182,7 +169,6 @@ function mapWithoutIndex(range: rangeParser.Range): rangeParser.Range {
  * Sort function to sort ranges by index.
  * @private
  */
-
 function sortByRangeIndex(a: RangeWithIndex, b: RangeWithIndex) {
   return a.index - b.index;
 }
@@ -191,7 +177,6 @@ function sortByRangeIndex(a: RangeWithIndex, b: RangeWithIndex) {
  * Sort function to sort ranges by start position.
  * @private
  */
-
-function sortByRangeStart(a: rangeParser.Range, b: rangeParser.Range) {
+function sortByRangeStart(a: Range, b: Range) {
   return a.start - b.start;
 }
