@@ -75,6 +75,12 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'bytes=500-999,1000-1499'), -1)
   })
 
+  it('should return -2 for mixed invalid and unsatisfiable ranges', function () {
+    assert.strictEqual(parse(200, 'bytes=abc-def,500-999'), -2)
+    assert.strictEqual(parse(200, 'bytes=500-999,xyz-uvw'), -2)
+    assert.strictEqual(parse(200, 'bytes=abc-def,500-999,xyz-uvw'), -2)
+  })
+
   it('should parse str', function () {
     var range = parse(1000, 'bytes=0-499')
     assert.strictEqual(range.type, 'bytes')
