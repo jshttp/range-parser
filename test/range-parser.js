@@ -1,4 +1,3 @@
-
 var assert = require('assert')
 var deepEqual = require('deep-equal')
 var parse = require('..')
@@ -7,6 +6,12 @@ describe('parseRange(len, str)', function () {
   it('should reject non-string str', function () {
     assert.throws(parse.bind(null, 200, {}),
       /TypeError: argument str must be a string/)
+  })
+
+  it('should return -2 for range missing dash', function () {
+    assert.strictEqual(parse(200, 'bytes=100200'), -2)
+    assert.strictEqual(parse(200, 'bytes=,100200'), -2)
+    assert.strictEqual(parse(200, 'bytes=100-200,100200'), -2)
   })
 
   it('should return -2 for invalid str', function () {
