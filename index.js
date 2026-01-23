@@ -42,6 +42,10 @@ function rangeParser (size, str, options) {
   // add ranges type
   ranges.type = str.slice(0, index)
 
+  // check if there are multiple ranges
+  var isMultiple = arr.length > 1
+  var hasValidFormat = false
+
   // parse all ranges
   for (var i = 0; i < arr.length; i++) {
     var indexOf = arr[i].indexOf('-')
@@ -67,11 +71,20 @@ function rangeParser (size, str, options) {
       end = size - 1
     }
 
-    if (isNaN(start) || isNaN(end)) {
-      return -2
+    var isInvalidFormat = isNaN(start) || isNaN(end)
+
+    // invalid format range
+    if (isInvalidFormat) {
+      if (!isMultiple) {
+        return -2
+      }
+      continue
     }
 
-    // invalid or unsatisifiable
+    // track valid format
+    hasValidFormat = true
+
+    // skip unsatisfiable ranges
     if (start > end || start < 0) {
       continue
     }
@@ -84,6 +97,10 @@ function rangeParser (size, str, options) {
   }
 
   if (ranges.length < 1) {
+    // all ranges have invalid format
+    if (!hasValidFormat) {
+      return -2
+    }
     // unsatisifiable
     return -1
   }

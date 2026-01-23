@@ -41,6 +41,12 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'bytes=100-15b0'), -2)
   })
 
+  it('should return -2 when all multiple ranges have invalid format', function () {
+    assert.strictEqual(parse(200, 'bytes=y-v,x-'), -2)
+    assert.strictEqual(parse(200, 'bytes=abc-def,ghi-jkl'), -2)
+    assert.strictEqual(parse(200, 'bytes=x-,y-,z-'), -2)
+  })
+
   it('should return -1 for unsatisfiable range', function () {
     assert.strictEqual(parse(200, 'bytes=500-600'), -1)
   })
@@ -53,6 +59,11 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'bytes=500-20'), -1)
     assert.strictEqual(parse(200, 'bytes=500-999'), -1)
     assert.strictEqual(parse(200, 'bytes=500-999,1000-1499'), -1)
+  })
+
+  it('should return -1 when invalid format mixed with unsatisfiable ranges', function () {
+    assert.strictEqual(parse(200, 'bytes=500-600,x-'), -1)
+    assert.strictEqual(parse(200, 'bytes=x-,500-600'), -1)
   })
 
   it('should parse str', function () {
@@ -109,6 +120,28 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(range.type, 'bytes')
     assert.strictEqual(range.length, 1)
     deepEqual(range[0], { start: 999, end: 999 })
+  })
+
+  it('should ignore invalid format range when valid range exists', function () {
+    var range = parse(1000, 'bytes=100-200,x-')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    deepEqual(range[0], { start: 100, end: 200 })
+  })
+
+  it('should ignore invalid format ranges when some are valid', function () {
+    var range = parse(1000, 'bytes=x-,0-100,y-')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    deepEqual(range[0], { start: 0, end: 100 })
+  })
+
+  it('should ignore invalid format ranges at different positions', function () {
+    var range = parse(1000, 'bytes=0-50,abc-def,100-150')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 2)
+    deepEqual(range[0], { start: 0, end: 50 })
+    deepEqual(range[1], { start: 100, end: 150 })
   })
 
   it('should parse str with multiple ranges', function () {
