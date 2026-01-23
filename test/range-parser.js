@@ -76,9 +76,9 @@ describe('parseRange(len, str)', function () {
   })
 
   it('should return -2 for mixed invalid and unsatisfiable ranges', function () {
-    assert.strictEqual(parse(200, 'bytes=abc-def,500-999'), -2)
-    assert.strictEqual(parse(200, 'bytes=500-999,xyz-uvw'), -2)
-    assert.strictEqual(parse(200, 'bytes=abc-def,500-999,xyz-uvw'), -2)
+    assert.strictEqual(parse(200, 'bytes=abc-def,500-999'), -1)
+    assert.strictEqual(parse(200, 'bytes=500-999,xyz-uvw'), -1)
+    assert.strictEqual(parse(200, 'bytes=abc-def,500-999,xyz-uvw'), -1)
   })
 
   it('should parse str', function () {

@@ -38,7 +38,7 @@ function rangeParser (size, str, options) {
   // split the range string
   var arr = str.slice(index + 1).split(',')
   var ranges = []
-  var code = -1
+  var valid = false
 
   // add ranges type
   ranges.type = str.slice(0, index)
@@ -47,7 +47,6 @@ function rangeParser (size, str, options) {
   for (var i = 0; i < arr.length; i++) {
     var indexOf = arr[i].indexOf('-')
     if (indexOf === -1) {
-      code = -2
       continue
     }
 
@@ -71,12 +70,12 @@ function rangeParser (size, str, options) {
 
     // invalid format range
     if (isNaN(start) || isNaN(end)) {
-      code = -2
       continue
     }
 
     // skip unsatisfiable ranges
     if (start > end || start < 0) {
+      valid = true
       continue
     }
 
@@ -88,7 +87,7 @@ function rangeParser (size, str, options) {
   }
 
   if (ranges.length < 1) {
-    return code
+    return valid ? -1 : -2
   }
 
   return options && options.combine
