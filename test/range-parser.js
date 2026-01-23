@@ -1,4 +1,3 @@
-
 var assert = require('assert')
 var deepEqual = require('deep-equal')
 var parse = require('..')
@@ -7,6 +6,15 @@ describe('parseRange(len, str)', function () {
   it('should reject non-string str', function () {
     assert.throws(parse.bind(null, 200, {}),
       /TypeError: argument str must be a string/)
+  })
+
+  it('should return -2 for completely empty header', function () {
+    assert.strictEqual(parse(200, ''), -2)
+  })
+
+  it('should return -2 for range missing dash', function () {
+    assert.strictEqual(parse(200, 'bytes=100200'), -2)
+    assert.strictEqual(parse(200, 'bytes=,100200'), -2)
   })
 
   it('should return -2 for invalid str', function () {
@@ -28,6 +36,12 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'bytes= - '), -2)
   })
 
+  it('should return -2 for empty range value', function () {
+    assert.strictEqual(parse(200, 'bytes='), -2)
+    assert.strictEqual(parse(200, 'bytes=,'), -2)
+    assert.strictEqual(parse(200, 'bytes= , , '), -2)
+  })
+
   it('should return -2 with multiple dashes in range', function () {
     assert.strictEqual(parse(200, 'bytes=100-200-300'), -2)
   })
@@ -39,6 +53,12 @@ describe('parseRange(len, str)', function () {
   it('should return -2 for invalid number format', function () {
     assert.strictEqual(parse(200, 'bytes=01a-150'), -2)
     assert.strictEqual(parse(200, 'bytes=100-15b0'), -2)
+  })
+
+  it('should return -2 when all multiple ranges have invalid format', function () {
+    assert.strictEqual(parse(200, 'bytes=y-v,x-'), -2)
+    assert.strictEqual(parse(200, 'bytes=abc-def,ghi-jkl'), -2)
+    assert.strictEqual(parse(200, 'bytes=x-,y-,z-'), -2)
   })
 
   it('should return -1 for unsatisfiable range', function () {
@@ -53,6 +73,12 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'bytes=500-20'), -1)
     assert.strictEqual(parse(200, 'bytes=500-999'), -1)
     assert.strictEqual(parse(200, 'bytes=500-999,1000-1499'), -1)
+  })
+
+  it('should return -1 for mixed invalid and unsatisfiable ranges', function () {
+    assert.strictEqual(parse(200, 'bytes=abc-def,500-999'), -1)
+    assert.strictEqual(parse(200, 'bytes=500-999,xyz-uvw'), -1)
+    assert.strictEqual(parse(200, 'bytes=abc-def,500-999,xyz-uvw'), -1)
   })
 
   it('should parse str', function () {
@@ -111,6 +137,28 @@ describe('parseRange(len, str)', function () {
     deepEqual(range[0], { start: 999, end: 999 })
   })
 
+  it('should ignore invalid format range when valid range exists', function () {
+    var range = parse(1000, 'bytes=100-200,x-')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    deepEqual(range[0], { start: 100, end: 200 })
+  })
+
+  it('should ignore invalid format ranges when some are valid', function () {
+    var range = parse(1000, 'bytes=x-,0-100,y-')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    deepEqual(range[0], { start: 0, end: 100 })
+  })
+
+  it('should ignore invalid format ranges at different positions', function () {
+    var range = parse(1000, 'bytes=0-50,abc-def,100-150')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 2)
+    deepEqual(range[0], { start: 0, end: 50 })
+    deepEqual(range[1], { start: 100, end: 150 })
+  })
+
   it('should parse str with multiple ranges', function () {
     var range = parse(1000, 'bytes=40-80,81-90,-1')
     assert.strictEqual(range.type, 'bytes')
@@ -160,5 +208,12 @@ describe('parseRange(len, str)', function () {
       deepEqual(range[1], { start: 20, end: 120 })
       deepEqual(range[2], { start: 0, end: 1 })
     })
+  })
+
+  it('should ignore whitespace-only invalid ranges when valid present', function () {
+    var range = parse(1000, 'bytes= , 0-10')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    deepEqual(range[0], { start: 0, end: 10 })
   })
 })
