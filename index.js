@@ -44,7 +44,7 @@ function rangeParser (size, str, options) {
 
   // check if there are multiple ranges
   var isMultiple = arr.length > 1
-  var hasValidFormat = false
+  var status = -2 // -2: all ranges invalid, -1: at least one valid but unsatisfiable
 
   // parse all ranges
   for (var i = 0; i < arr.length; i++) {
@@ -71,18 +71,16 @@ function rangeParser (size, str, options) {
       end = size - 1
     }
 
-    var isInvalidFormat = isNaN(start) || isNaN(end)
-
     // invalid format range
-    if (isInvalidFormat) {
+    if (isNaN(start) || isNaN(end)) {
       if (!isMultiple) {
         return -2
       }
       continue
     }
 
-    // track valid format
-    hasValidFormat = true
+    // unsatisifiable
+    status = -1
 
     // skip unsatisfiable ranges
     if (start > end || start < 0) {
@@ -97,12 +95,7 @@ function rangeParser (size, str, options) {
   }
 
   if (ranges.length < 1) {
-    // all ranges have invalid format
-    if (!hasValidFormat) {
-      return -2
-    }
-    // unsatisifiable
-    return -1
+    return status
   }
 
   return options && options.combine
