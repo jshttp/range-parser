@@ -38,23 +38,17 @@ function rangeParser (size, str, options) {
   // split the range string
   var arr = str.slice(index + 1).split(',')
   var ranges = []
+  var code = -1
 
   // add ranges type
   ranges.type = str.slice(0, index)
-
-  // check if there are multiple ranges
-  var isMultiple = arr.length > 1
-  var status = -2 // -2: all ranges invalid, -1: at least one valid but unsatisfiable
 
   // parse all ranges
   for (var i = 0; i < arr.length; i++) {
     var indexOf = arr[i].indexOf('-')
     if (indexOf === -1) {
-      // ignore empty/whitespace-only ranges if there are other valid ranges
-      if (arr.length > 1 && arr[i].trim() === '') {
-        continue
-      }
-      return -2
+      code = -2
+      continue
     }
 
     var startStr = arr[i].slice(0, indexOf).trim()
@@ -77,14 +71,9 @@ function rangeParser (size, str, options) {
 
     // invalid format range
     if (isNaN(start) || isNaN(end)) {
-      if (!isMultiple) {
-        return -2
-      }
+      code = -2
       continue
     }
-
-    // unsatisifiable
-    status = -1
 
     // skip unsatisfiable ranges
     if (start > end || start < 0) {
@@ -99,7 +88,7 @@ function rangeParser (size, str, options) {
   }
 
   if (ranges.length < 1) {
-    return status
+    return code
   }
 
   return options && options.combine
