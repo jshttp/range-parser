@@ -8,6 +8,10 @@ describe('parseRange(len, str)', function () {
       /TypeError: argument str must be a string/)
   })
 
+  it('should return -2 for completely empty header', function () {
+    assert.strictEqual(parse(200, ''), -2)
+  })
+
   it('should return -2 for range missing dash', function () {
     assert.strictEqual(parse(200, 'bytes=100200'), -2)
     assert.strictEqual(parse(200, 'bytes=,100200'), -2)
@@ -31,6 +35,12 @@ describe('parseRange(len, str)', function () {
     assert.strictEqual(parse(200, 'bytes=100--200'), -2)
     assert.strictEqual(parse(200, 'bytes=-'), -2)
     assert.strictEqual(parse(200, 'bytes= - '), -2)
+  })
+
+  it('should return -2 for empty range value', function () {
+    assert.strictEqual(parse(200, 'bytes='), -2)
+    assert.strictEqual(parse(200, 'bytes=,'), -2)
+    assert.strictEqual(parse(200, 'bytes= , , '), -2)
   })
 
   it('should return -2 with multiple dashes in range', function () {
@@ -198,5 +208,12 @@ describe('parseRange(len, str)', function () {
       deepEqual(range[1], { start: 20, end: 120 })
       deepEqual(range[2], { start: 0, end: 1 })
     })
+  })
+
+  it('should ignore whitespace-only invalid ranges when valid present', function () {
+    var range = parse(1000, 'bytes= , 0-10')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    deepEqual(range[0], { start: 0, end: 10 })
   })
 })

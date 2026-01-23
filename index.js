@@ -50,6 +50,10 @@ function rangeParser (size, str, options) {
   for (var i = 0; i < arr.length; i++) {
     var indexOf = arr[i].indexOf('-')
     if (indexOf === -1) {
+      // ignore empty/whitespace-only ranges if there are other valid ranges
+      if (arr.length > 1 && arr[i].trim() === '') {
+        continue
+      }
       return -2
     }
 
