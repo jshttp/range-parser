@@ -23,7 +23,7 @@ $ npm install range-parser
 <!-- eslint-disable no-unused-vars -->
 
 ```js
-var parseRange = require('range-parser')
+var parseRange = require("range-parser");
 ```
 
 ### parseRange(size, header, options)
@@ -32,21 +32,19 @@ Parse the given `header` string where `size` is the size of the selected
 representation that is to be partitioned into subranges. An array of subranges
 will be returned or negative numbers indicating an error parsing.
 
-  * `-2` signals a malformed header string
-  * `-1` signals an unsatisfiable range
-
-<!-- eslint-disable no-undef -->
+- `-2` signals a malformed header string
+- `-1` signals an unsatisfiable range
 
 ```js
 // parse header from request
-var subranges = parseRange(size, req.headers.range)
+var subranges = parseRange(size, req.headers.range);
 
 // the type of the subranges
-if (subranges.type === 'bytes') {
+if (subranges.type === "bytes") {
   // the ranges
   subranges.forEach(function (r) {
     // do something with r.start and r.end
-  })
+  });
 }
 ```
 
@@ -60,10 +58,8 @@ Specifies if overlapping & adjacent subranges should be combined, defaults to
 `false`. When `true`, ranges will be combined and returned as if they were
 specified that way in the header.
 
-<!-- eslint-disable no-undef -->
-
 ```js
-parseRange(100, 'bytes=50-55,0-10,5-10,56-60', { combine: true })
+parseRange(100, "bytes=50-55,0-10,5-10,56-60", { combine: true });
 // => [
 //      { start: 0,  end: 10 },
 //      { start: 50, end: 60 }
