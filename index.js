@@ -59,6 +59,11 @@ function rangeParser (size, str, options) {
     if (startStr.length === 0) {
       start = size - end
       end = size - 1
+
+      // a suffix-length larger than the representation uses the whole representation
+      if (start < 0) {
+        start = 0
+      }
     } else if (endStr.length === 0) {
       end = size - 1
     }
