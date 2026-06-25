@@ -57,7 +57,7 @@ function rangeParser (size, str, options) {
     var end = parsePos(endStr)
 
     if (startStr.length === 0) {
-      start = size - end
+      start = Math.max(size - end, 0)
       end = size - 1
     } else if (endStr.length === 0) {
       end = size - 1
@@ -74,7 +74,7 @@ function rangeParser (size, str, options) {
     }
 
     // skip unsatisfiable ranges
-    if (start > end || start < 0) {
+    if (start > end) {
       valid = true
       continue
     }

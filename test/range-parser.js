@@ -109,6 +109,18 @@ describe('parseRange(len, str)', function () {
     deepEqual(range[0], { start: 600, end: 999 })
   })
 
+  it('should be unsatisfiable asking for -0', function () {
+    var range = parse(1000, 'bytes=-0')
+    assert.strictEqual(range, -1)
+  })
+
+  it('should use the whole representation when the suffix-length is larger', function () {
+    var range = parse(100, 'bytes=-101')
+    assert.strictEqual(range.type, 'bytes')
+    assert.strictEqual(range.length, 1)
+    deepEqual(range[0], { start: 0, end: 99 })
+  })
+
   it('should parse str with only start', function () {
     var range = parse(1000, 'bytes=400-')
     assert.strictEqual(range.type, 'bytes')
