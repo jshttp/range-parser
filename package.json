@@ -44,5 +44,9 @@
     "test": "mocha --reporter spec",
     "test-ci": "nyc --reporter=lcovonly --reporter=text npm test",
     "test-cov": "nyc --reporter=html --reporter=text npm test"
+  },
+  "homepage": "https://github.com/jshttp/range-parser",
+  "bugs": {
+    "url": "https://github.com/jshttp/range-parser/issues"
   }
 }
