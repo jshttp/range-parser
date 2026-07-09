@@ -220,6 +220,16 @@ describe('parseRange(len, str)', function () {
       deepEqual(range[1], { start: 20, end: 120 })
       deepEqual(range[2], { start: 0, end: 1 })
     })
+
+    it('should retain original order when an earlier range is absorbed', function () {
+      var range = parse(1000, 'bytes=50-60,200-300,0-100', { combine: true })
+      assert.strictEqual(range.type, 'bytes')
+      assert.strictEqual(range.length, 2)
+      assert.strictEqual(range[0].start, 0)
+      assert.strictEqual(range[0].end, 100)
+      assert.strictEqual(range[1].start, 200)
+      assert.strictEqual(range[1].end, 300)
+    })
   })
 
   it('should ignore whitespace-only invalid ranges when valid present', function () {

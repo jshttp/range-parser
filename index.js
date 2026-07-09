@@ -120,9 +120,11 @@ function combineRanges (ranges) {
     if (range.start > current.end + 1) {
       // next range
       ordered[++j] = range
-    } else if (range.end > current.end) {
-      // extend range
-      current.end = range.end
+    } else {
+      // overlapping or adjacent range
+      if (range.end > current.end) {
+        current.end = range.end
+      }
       current.index = Math.min(current.index, range.index)
     }
   }
