@@ -36,9 +36,9 @@
   },
   "devDependencies": {
     "@borderless/ts-scripts": "^0.15.0",
-    "@vitest/coverage-v8": "^4.0.18",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "@vitest/coverage-v8": "^5.1.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   },
   "publishConfig": {
     "access": "public"
