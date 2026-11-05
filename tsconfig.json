@@ -1,12 +1,12 @@
 {
   "extends": "@borderless/ts-scripts/configs/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2015",
-    "lib": ["ES2015"],
+    "target": "es2023",
+    "lib": ["es2023"],
     "rootDir": "src",
     "outDir": "dist",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "types": []
   },
   "include": ["src/**/*"]
