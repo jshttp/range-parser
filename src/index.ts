@@ -23,14 +23,12 @@ export interface Result {
 
 /**
  * Parse "Range" header `str` relative to the given file `size`.
- *
- * @param {Number} size
- * @param {String} str
- * @param {Object} [options]
- * @return {Array}
- * @public
  */
 export function parse(size: number, str: string): Result | -1 | -2 {
+  if (!Number.isSafeInteger(size)) {
+    throw new TypeError(`Unsafe size integer: ${size}`);
+  }
+
   const eqIndex = str.indexOf("=");
   if (eqIndex === -1) return -2;
 
@@ -62,8 +60,8 @@ export function parse(size: number, str: string): Result | -1 | -2 {
     if (startStrIndex === dashIndex) {
       if (endStrIndex === dashIndex + 1) {
         index = endIndex + 1;
-        continue;
-      } // just "-" is not valid
+        continue; // Just "-" is not valid.
+      }
 
       // suffix-byte-range-spec, e.g. "-500"
       start = Math.max(size - parsePos(str, dashIndex + 1, endStrIndex), 0);
@@ -85,7 +83,7 @@ export function parse(size: number, str: string): Result | -1 | -2 {
       continue;
     }
 
-    // invalid or unsatisfiable
+    // Invalid or unsatisfiable.
     if (start > end) {
       valid = true;
       continue;
@@ -107,15 +105,16 @@ export function parse(size: number, str: string): Result | -1 | -2 {
 
 /**
  * Parse string to integer.
- * @private
  */
 function parsePos(str: string, start: number, end: number): number {
+  let value = 0;
   for (let i = start; i < end; i++) {
     const code = str.charCodeAt(i);
     if (code < 48 || code > 57) return NaN; // not a digit
+    value = value * 10 + (code - 48);
   }
 
-  return Number(str.slice(start, end));
+  return value;
 }
 
 /**
