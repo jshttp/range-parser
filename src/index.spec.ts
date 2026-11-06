@@ -68,9 +68,9 @@ describe("parse(len, str)", () => {
     -Infinity,
     NaN,
     1.5,
-  ])("should reject an unsafe size of %s", (size) => {
+  ])("should reject an invalid size of %s", (size) => {
     expect(() => parse(size, "bytes=0-0")).toThrow(
-      new TypeError(`Unsafe size: ${size}`),
+      new TypeError(`Invalid size: ${size}`),
     );
   });
 
@@ -259,6 +259,23 @@ describe("parse(len, str)", () => {
 });
 
 describe("combineRanges(ranges)", () => {
+  it("should return new ranges without modifying the input", () => {
+    const ranges = [
+      { start: 10, end: 20 },
+      { start: 0, end: 9 },
+      { start: 30, end: 40 },
+    ];
+    const original = ranges.map((range) => ({ ...range }));
+    const combined = combineRanges(ranges);
+
+    expect(combined).toEqual([
+      { start: 0, end: 20, index: 0 },
+      { start: 30, end: 40, index: 2 },
+    ]);
+    expect(ranges).toEqual(original);
+    expect(combined[1]).not.toBe(ranges[2]);
+  });
+
   it("should combine overlapping ranges", () => {
     var combined = combineRanges([
       { start: 0, end: 4 },
@@ -268,8 +285,21 @@ describe("combineRanges(ranges)", () => {
       { start: 101, end: 102 },
     ]);
     expect(combined).toEqual([
-      { start: 0, end: 75 },
-      { start: 90, end: 199 },
+      { start: 0, end: 75, index: 0 },
+      { start: 90, end: 199, index: 1 },
+    ]);
+  });
+
+  it("should retain the earliest index when absorbing a range", () => {
+    expect(
+      combineRanges([
+        { start: 50, end: 60 },
+        { start: 200, end: 300 },
+        { start: 0, end: 100 },
+      ]),
+    ).toEqual([
+      { start: 0, end: 100, index: 0 },
+      { start: 200, end: 300, index: 1 },
     ]);
   });
 
@@ -281,9 +311,9 @@ describe("combineRanges(ranges)", () => {
       { start: 101, end: 120 },
     ]);
     expect(combined).toEqual([
-      { start: 149, end: 149 },
-      { start: 20, end: 120 },
-      { start: 0, end: 1 },
+      { start: 149, end: 149, index: 0 },
+      { start: 20, end: 120, index: 1 },
+      { start: 0, end: 1, index: 2 },
     ]);
   });
 });

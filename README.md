@@ -46,14 +46,15 @@ if (typeof subranges === "object" && subranges.type === "bytes") {
 ### `combineRanges(ranges)`
 
 Overlapping and adjacent ranges will be combined and returned.
+Returned ranges include the `index` used to preserve their original order.
 
 ```js
 const subranges = parse(100, "bytes=50-55,0-10,5-10,56-60");
 if (typeof subranges === "object") {
   combineRanges(subranges.ranges);
   // => [
-  //      { start: 50, end: 60 },
-  //      { start: 0,  end: 10 }
+  //      { start: 50, end: 60, index: 0 },
+  //      { start: 0,  end: 10, index: 1 }
   //    ]
 }
 ```

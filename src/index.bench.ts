@@ -33,6 +33,23 @@ describe("parse edge cases", () => {
 });
 
 describe("combineRanges", () => {
+  for (const [name, count, width] of [
+    ["disjoint ranges", 20, 5],
+    ["many overlapping ranges", 100, 100],
+    ["many small overlaps", 100, 12],
+  ] as const) {
+    const ranges = Array.from({ length: count }, (_, i) => {
+      const start = ((i * 37) % count) * 10;
+      return { start, end: start + width };
+    });
+
+    test(name, ({ bench }) => {
+      bench("combine", () => {
+        combineRanges(ranges);
+      });
+    });
+  }
+
   test("simple overlapping ranges", ({ bench }) => {
     bench("combine", () => {
       combineRanges([

@@ -26,7 +26,7 @@ export interface Result {
  */
 export function parse(size: number, str: string): Result | -1 | -2 {
   if (!Number.isSafeInteger(size)) {
-    throw new TypeError(`Unsafe size integer: ${size}`);
+    throw new TypeError(`Invalid size: ${size}`);
   }
 
   const eqIndex = str.indexOf("=");
@@ -117,71 +117,31 @@ function parsePos(str: string, start: number, end: number): number {
   return value;
 }
 
-/**
- * Combine overlapping & adjacent ranges.
- */
-export function combineRanges(ranges: Range[]): Range[] {
-  var ordered = ranges.map(mapWithIndex).sort(sortByRangeStart);
-
-  for (var j = 0, i = 1; i < ordered.length; i++) {
-    var range = ordered[i];
-    var current = ordered[j];
-
-    if (range.start > current.end + 1) {
-      // next range
-      ordered[++j] = range;
-    } else if (range.end > current.end) {
-      // extend range
-      current.end = range.end;
-      current.index = Math.min(current.index, range.index);
-    }
-  }
-
-  // trim ordered array
-  ordered.length = j + 1;
-
-  return ordered.sort(sortByRangeIndex).map(mapWithoutIndex);
-}
-
-interface RangeWithIndex extends Range {
+export interface RangeWithIndex extends Range {
   index: number;
 }
 
 /**
- * Map function to add index value to ranges.
- * @private
+ * Combine overlapping & adjacent ranges.
  */
-function mapWithIndex(range: Range, index: number): RangeWithIndex {
-  return {
-    start: range.start,
-    end: range.end,
-    index: index,
-  };
-}
+export function combineRanges(ranges: Range[]): RangeWithIndex[] {
+  const ordered = ranges
+    .map((range, index) => ({ start: range.start, end: range.end, index }))
+    .sort((a, b) => a.start - b.start);
 
-/**
- * Map function to remove index value from ranges.
- * @private
- */
-function mapWithoutIndex(range: Range): Range {
-  return {
-    start: range.start,
-    end: range.end,
-  };
-}
+  let j = 0;
+  for (let i = 1; i < ordered.length; i++) {
+    const range = ordered[i];
+    const current = ordered[j];
 
-/**
- * Sort function to sort ranges by index.
- * @private
- */
-function sortByRangeIndex(a: RangeWithIndex, b: RangeWithIndex) {
-  return a.index - b.index;
-}
+    if (range.start > current.end + 1) {
+      ordered[++j] = range;
+    } else {
+      current.end = Math.max(current.end, range.end);
+      current.index = Math.min(current.index, range.index);
+    }
+  }
 
-/**
- * Sort function to sort ranges by start position.
- * @private
- */
-function sortByRangeStart(a: Range, b: Range) {
-  return a.start - b.start;
+  ordered.length = j + 1;
+  return ordered.sort((a, b) => a.index - b.index);
 }
