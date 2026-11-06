@@ -14,9 +14,10 @@ export interface Range {
 }
 
 /**
- * Result object contains type and array of Range objects.
+ * Result object contains a status code, type, and array of Range objects.
  */
 export interface Result {
+  code: number;
   type: string;
   ranges: Range[];
 }
@@ -24,19 +25,19 @@ export interface Result {
 /**
  * Parse "Range" header `str` relative to the given file `size`.
  */
-export function parse(size: number, str: string): Result | -1 | -2 {
-  if (!Number.isSafeInteger(size)) {
+export function parse(size: number, str: string): Result {
+  if (!Number.isSafeInteger(size) || size < 0) {
     throw new TypeError(`Invalid size: ${size}`);
   }
 
-  const eqIndex = str.indexOf("=");
-  if (eqIndex === -1) return -2;
-
   const ranges: Range[] = [];
+  const eqIndex = str.indexOf("=");
+  if (eqIndex === -1) return { code: 1, type: "", ranges };
+
   const type = str.slice(0, eqIndex);
   const len = str.length;
   let index = eqIndex + 1;
-  let valid = false;
+  let code: Result["code"] = 0;
 
   do {
     const commaIndex = str.indexOf(",", index);
@@ -44,6 +45,7 @@ export function parse(size: number, str: string): Result | -1 | -2 {
     const dashIndex = str.indexOf("-", index);
 
     if (dashIndex === -1 || dashIndex > endIndex) {
+      code |= 1; // Invalid range.
       index = endIndex + 1;
       continue;
     }
@@ -59,6 +61,7 @@ export function parse(size: number, str: string): Result | -1 | -2 {
 
     if (startStrIndex === dashIndex) {
       if (endStrIndex === dashIndex + 1) {
+        code |= 1; // Invalid range.
         index = endIndex + 1;
         continue; // Just "-" is not valid.
       }
@@ -80,12 +83,12 @@ export function parse(size: number, str: string): Result | -1 | -2 {
     index = endIndex + 1;
 
     if (isNaN(start) || isNaN(end)) {
+      code |= 1; // Unable to parse.
       continue;
     }
 
-    // Invalid or unsatisfiable.
     if (start > end) {
-      valid = true;
+      code |= 2; // Bad range request.
       continue;
     }
 
@@ -95,12 +98,7 @@ export function parse(size: number, str: string): Result | -1 | -2 {
     });
   } while (index < len);
 
-  if (ranges.length < 1) {
-    // unsatisfiable
-    return valid ? -1 : -2;
-  }
-
-  return { type, ranges };
+  return { code, type, ranges };
 }
 
 /**
@@ -125,6 +123,8 @@ export interface RangeWithIndex extends Range {
  * Combine overlapping & adjacent ranges.
  */
 export function combineRanges(ranges: Range[]): RangeWithIndex[] {
+  if (ranges.length === 0) return [];
+
   const ordered = ranges
     .map((range, index) => ({ start: range.start, end: range.end, index }))
     .sort((a, b) => a.start - b.start);
