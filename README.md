@@ -10,6 +10,8 @@ Range header field parser.
 
 ## Installation
 
+Requires Node.js 22 or later. This package uses ES modules.
+
 ```sh
 npm install range-parser
 ```

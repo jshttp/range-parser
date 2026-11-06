@@ -1,5 +1,5 @@
 import { describe, test } from "vitest";
-import { parse, combineRanges } from "./index";
+import { parse, combineRanges } from "./index.js";
 
 describe("parse", () => {
   test("1000 byte range", ({ bench }) => {
