@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parse, combineRanges } from "./index";
+import { parse, combineRanges } from "./index.js";
 
 describe("parse(len, str)", () => {
   it("should return -2 for an empty str", () => {
