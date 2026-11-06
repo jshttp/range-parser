@@ -1,66 +1,159 @@
 import { describe, it, expect } from "vitest";
 import { parse, combineRanges } from "./index";
 
-describe("parse(len, str)", () => {
-  it("should return -2 for an empty str", () => {
-    expect(parse(200, "")).toBe(-2);
+describe("parse(size, str)", () => {
+  it("should return code 1 for an empty str", () => {
+    expect(parse(200, "")).toEqual({ code: 1, type: "", ranges: [] });
   });
 
-  it("should return -2 for range missing dash", () => {
-    expect(parse(200, "bytes=100200")).toBe(-2);
-    expect(parse(200, "bytes=,100200")).toBe(-2);
+  it("should return code 1 for range missing dash", () => {
+    expect(parse(200, "bytes=100200")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=,100200")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 for empty range value", () => {
-    expect(parse(200, "bytes=")).toBe(-2);
-    expect(parse(200, "bytes=,")).toBe(-2);
-    expect(parse(200, "bytes= , , ")).toBe(-2);
+  it("should return code 1 for empty range value", () => {
+    expect(parse(200, "bytes=")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=,")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes= , , ")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 when all multiple ranges have invalid format", () => {
-    expect(parse(200, "bytes=y-v,x-")).toBe(-2);
-    expect(parse(200, "bytes=abc-def,ghi-jkl")).toBe(-2);
-    expect(parse(200, "bytes=x-,y-,z-")).toBe(-2);
+  it("should return code 1 when all multiple ranges have invalid format", () => {
+    expect(parse(200, "bytes=y-v,x-")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=abc-def,ghi-jkl")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=x-,y-,z-")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 for invalid str", () => {
-    expect(parse(200, "malformed")).toBe(-2);
+  it("should return code 1 for a header missing equals", () => {
+    expect(parse(200, "malformed")).toEqual({ code: 1, type: "", ranges: [] });
   });
 
-  it("should return -2 for missing bytes", () => {
-    expect(parse(200, "bytes=")).toBe(-2);
-    expect(parse(200, "bytes= ")).toBe(-2);
+  it("should return code 1 for missing bytes", () => {
+    expect(parse(200, "bytes=")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes= ")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 for invalid start byte position", () => {
-    expect(parse(200, "bytes=x-100")).toBe(-2);
+  it("should return code 1 for invalid start byte position", () => {
+    expect(parse(200, "bytes=x-100")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 for invalid end byte position", () => {
-    expect(parse(200, "bytes=100-x")).toBe(-2);
+  it("should return code 1 for invalid end byte position", () => {
+    expect(parse(200, "bytes=100-x")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 for invalid range format", () => {
-    expect(parse(200, "bytes=--100")).toBe(-2);
-    expect(parse(200, "bytes=100--200")).toBe(-2);
-    expect(parse(200, "bytes=-")).toBe(-2);
-    expect(parse(200, "bytes= - ")).toBe(-2);
+  it("should return code 1 for invalid range format", () => {
+    expect(parse(200, "bytes=--100")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=100--200")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 with multiple dashes in range", () => {
-    expect(parse(200, "bytes=100-200-300")).toBe(-2);
+  it("should return code 1 for bare dash ranges", () => {
+    expect(parse(200, "bytes=-")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes= - ")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -2 for negative start byte position", () => {
-    expect(parse(200, "bytes=-100-150")).toBe(-2);
+  it("should retain valid ranges when a bare dash is present", () => {
+    expect(parse(200, "bytes=-,0-10")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [{ start: 0, end: 10 }],
+    });
   });
 
-  it("should return -2 for invalid number format", () => {
-    expect(parse(200, "bytes=01a-150")).toBe(-2);
-    expect(parse(200, "bytes=100-15b0")).toBe(-2);
+  it("should return code 1 with multiple dashes in range", () => {
+    expect(parse(200, "bytes=100-200-300")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+  });
+
+  it("should return code 1 for negative start byte position", () => {
+    expect(parse(200, "bytes=-100-150")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+  });
+
+  it("should return code 1 for invalid number format", () => {
+    expect(parse(200, "bytes=01a-150")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=100-15b0")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
   it.each([
+    -1,
+    Number.MIN_SAFE_INTEGER,
     Number.MAX_SAFE_INTEGER + 1,
     Number.MIN_SAFE_INTEGER - 1,
     1e20,
@@ -76,6 +169,7 @@ describe("parse(len, str)", () => {
 
   it("should accept the maximum safe integer size", () => {
     expect(parse(Number.MAX_SAFE_INTEGER, "bytes=9007199254740990-")).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 9007199254740990, end: 9007199254740990 }],
     });
@@ -83,42 +177,84 @@ describe("parse(len, str)", () => {
 
   it("should cap overflowing end positions at size", () => {
     expect(parse(200, `bytes=0-${"9".repeat(400)}`)).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 0, end: 199 }],
     });
   });
 
   it("should reject invalid digits after positions exceed safe integers", () => {
-    expect(parse(200, "bytes=0-90071992547409930x")).toBe(-2);
+    expect(parse(200, "bytes=0-90071992547409930x")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -1 for unsatisfiable range", () => {
-    expect(parse(200, "bytes=500-600")).toBe(-1);
+  it("should return code 2 for unsatisfiable range", () => {
+    expect(parse(200, "bytes=500-600")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -1 for unsatisfiable range with multiple ranges", () => {
-    expect(parse(200, "bytes=500-600,601-700")).toBe(-1);
+  it("should return code 2 for unsatisfiable range with multiple ranges", () => {
+    expect(parse(200, "bytes=500-600,601-700")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should return -1 if all specified ranges are unsatisfiable", () => {
-    expect(parse(200, "bytes=500-20")).toBe(-1);
-    expect(parse(200, "bytes=500-999")).toBe(-1);
-    expect(parse(200, "bytes=500-999,1000-1499")).toBe(-1);
+  it("should return code 2 if all specified ranges are unsatisfiable", () => {
+    expect(parse(200, "bytes=500-20")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=500-999")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=500-999,1000-1499")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
-  it("should prefer -1 when all ranges are invalid and unsatisfiable ranges", () => {
-    expect(parse(200, "bytes=abc-def,500-999")).toBe(-1);
-    expect(parse(200, "bytes=500-999,xyz-uvw")).toBe(-1);
-    expect(parse(200, "bytes=abc-def,500-999,xyz-uvw")).toBe(-1);
+  it("should return code 3 when ranges are malformed and unsatisfiable", () => {
+    expect(parse(200, "bytes=abc-def,500-999")).toEqual({
+      code: 3,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=500-999,xyz-uvw")).toEqual({
+      code: 3,
+      type: "bytes",
+      ranges: [],
+    });
+    expect(parse(200, "bytes=abc-def,500-999,xyz-uvw")).toEqual({
+      code: 3,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
   it("should be unsatisfiable asking for -0", () => {
-    expect(parse(1000, "bytes=-0")).toBe(-1);
+    expect(parse(1000, "bytes=-0")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [],
+    });
   });
 
   it("should parse str", () => {
     var range = parse(1000, "bytes=0-499");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 0, end: 499 }],
     });
@@ -127,6 +263,7 @@ describe("parse(len, str)", () => {
   it("should cap end at size", () => {
     var range = parse(200, "bytes=0-499");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 0, end: 199 }],
     });
@@ -135,6 +272,7 @@ describe("parse(len, str)", () => {
   it("should parse str", () => {
     var range = parse(1000, "bytes=40-80");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 40, end: 80 }],
     });
@@ -143,6 +281,7 @@ describe("parse(len, str)", () => {
   it("should parse str asking for last n bytes", () => {
     var range = parse(1000, "bytes=-400");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 600, end: 999 }],
     });
@@ -151,6 +290,7 @@ describe("parse(len, str)", () => {
   it("should parse str with only start", () => {
     var range = parse(1000, "bytes=400-");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 400, end: 999 }],
     });
@@ -159,6 +299,7 @@ describe("parse(len, str)", () => {
   it('should parse "bytes=0-"', () => {
     var range = parse(1000, "bytes=0-");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 0, end: 999 }],
     });
@@ -167,6 +308,7 @@ describe("parse(len, str)", () => {
   it("should parse str with no bytes", () => {
     var range = parse(1000, "bytes=0-0");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 0, end: 0 }],
     });
@@ -175,6 +317,7 @@ describe("parse(len, str)", () => {
   it("should parse str asking for last byte", () => {
     var range = parse(1000, "bytes=-1");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 999, end: 999 }],
     });
@@ -183,6 +326,7 @@ describe("parse(len, str)", () => {
   it("should parse str with multiple ranges", () => {
     var range = parse(1000, "bytes=40-80,81-90,-1");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [
         { start: 40, end: 80 },
@@ -192,9 +336,10 @@ describe("parse(len, str)", () => {
     });
   });
 
-  it("should parse str with some invalid ranges", () => {
+  it("should retain valid ranges with code 2 for unsatisfiable ranges", () => {
     var range = parse(200, "bytes=0-499,1000-,500-999");
     expect(range).toEqual({
+      code: 2,
       type: "bytes",
       ranges: [{ start: 0, end: 199 }],
     });
@@ -203,6 +348,7 @@ describe("parse(len, str)", () => {
   it("should parse str with whitespace", () => {
     var range = parse(1000, "bytes=   40-80 , 81-90 , -1 ");
     expect(range).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [
         { start: 40, end: 80 },
@@ -215,6 +361,7 @@ describe("parse(len, str)", () => {
   it("should parse non-byte range", () => {
     var range = parse(1000, "items=0-5");
     expect(range).toEqual({
+      code: 0,
       type: "items",
       ranges: [{ start: 0, end: 5 }],
     });
@@ -222,27 +369,34 @@ describe("parse(len, str)", () => {
 
   it("should use the whole representation when the suffix-length is larger", () => {
     expect(parse(100, "bytes=-101")).toEqual({
+      code: 0,
       type: "bytes",
       ranges: [{ start: 0, end: 99 }],
     });
   });
 
-  it("should ignore invalid format range when valid range exists", () => {
+  it("should report code 1 for invalid format range when valid range exists", () => {
     var range = parse(1000, "bytes=100-200,x-");
     expect(range).toEqual({
+      code: 1,
       type: "bytes",
       ranges: [{ start: 100, end: 200 }],
     });
   });
 
-  it("should ignore invalid format ranges when some are valid", () => {
+  it("should report code 1 for invalid format ranges when some are valid", () => {
     var range = parse(1000, "bytes=x-,0-100,y-");
-    expect(range).toEqual({ type: "bytes", ranges: [{ start: 0, end: 100 }] });
+    expect(range).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [{ start: 0, end: 100 }],
+    });
   });
 
-  it("should ignore invalid format ranges at different positions", () => {
+  it("should report code 1 for invalid format ranges at different positions", () => {
     var range = parse(1000, "bytes=0-50,abc-def,100-150");
     expect(range).toEqual({
+      code: 1,
       type: "bytes",
       ranges: [
         { start: 0, end: 50 },
@@ -251,14 +405,34 @@ describe("parse(len, str)", () => {
     });
   });
 
-  it("should ignore whitespace-only invalid ranges when valid present", () => {
+  it("should report code 1 for whitespace-only invalid ranges when valid present", () => {
     var range = parse(1000, "bytes= , 0-10");
 
-    expect(range).toEqual({ type: "bytes", ranges: [{ start: 0, end: 10 }] });
+    expect(range).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [{ start: 0, end: 10 }],
+    });
+  });
+
+  it.each([
+    "bytes=0-10,x-,1000-",
+    "bytes=1000-,0-10,x-",
+    "bytes=x-,1000-,0-10",
+  ])("should retain valid ranges with both status bits for %s", (header) => {
+    expect(parse(200, header)).toEqual({
+      code: 3,
+      type: "bytes",
+      ranges: [{ start: 0, end: 10 }],
+    });
   });
 });
 
 describe("combineRanges(ranges)", () => {
+  it("should return an empty array for no ranges", () => {
+    expect(combineRanges([])).toEqual([]);
+  });
+
   it("should return new ranges without modifying the input", () => {
     const ranges = [
       { start: 10, end: 20 },
