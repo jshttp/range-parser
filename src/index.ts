@@ -5,195 +5,143 @@
  * MIT Licensed
  */
 
-"use strict";
+/**
+ * Range object contains normalized start and end positions.
+ */
+export interface Range {
+  start: number;
+  end: number;
+}
 
 /**
- * Module exports.
- * @public
+ * Result object contains type and array of Range objects.
  */
-
-export = rangeParser;
-
-namespace rangeParser {
-  export interface Range {
-    start: number;
-    end: number;
-  }
-
-  export interface Result extends Array<Range> {
-    type: string;
-  }
-
-  export interface Options {
-    combine?: boolean;
-  }
+export interface Result {
+  type: string;
+  ranges: Range[];
 }
 
 /**
  * Parse "Range" header `str` relative to the given file `size`.
- *
- * @param {Number} size
- * @param {String} str
- * @param {Object} [options]
- * @return {Array}
- * @public
  */
-
-function rangeParser(size: number, str: string, options?: rangeParser.Options) {
-  if (typeof str !== "string") {
-    throw new TypeError("argument str must be a string");
+export function parse(size: number, str: string): Result | -1 | -2 {
+  if (!Number.isSafeInteger(size)) {
+    throw new TypeError(`Invalid size: ${size}`);
   }
 
-  var index = str.indexOf("=");
+  const eqIndex = str.indexOf("=");
+  if (eqIndex === -1) return -2;
 
-  if (index === -1) {
-    return -2;
-  }
+  const ranges: Range[] = [];
+  const type = str.slice(0, eqIndex);
+  const len = str.length;
+  let index = eqIndex + 1;
+  let valid = false;
 
-  // split the range string
-  var valid = false;
-  var arr = str.slice(index + 1).split(",");
-  var ranges: rangeParser.Result = Object.assign([], {
-    type: str.slice(0, index),
-  });
+  do {
+    const commaIndex = str.indexOf(",", index);
+    const endIndex = commaIndex !== -1 ? commaIndex : len;
+    const dashIndex = str.indexOf("-", index);
 
-  // parse all ranges
-  for (var i = 0; i < arr.length; i++) {
-    var indexOf = arr[i].indexOf("-");
-    if (indexOf === -1) {
+    if (dashIndex === -1 || dashIndex > endIndex) {
+      index = endIndex + 1;
       continue;
     }
 
-    var startStr = arr[i].slice(0, indexOf).trim();
-    var endStr = arr[i].slice(indexOf + 1).trim();
+    // handle ows around numbers
+    let startStrIndex = index;
+    let endStrIndex = endIndex;
+    while (str.charCodeAt(startStrIndex) === 32) startStrIndex++;
+    while (str.charCodeAt(endStrIndex - 1) === 32) endStrIndex--;
 
-    var start = parsePos(startStr);
-    var end = parsePos(endStr);
+    let start = NaN;
+    let end = NaN;
 
-    if (startStr.length === 0) {
-      start = Math.max(size - end, 0);
+    if (startStrIndex === dashIndex) {
+      if (endStrIndex === dashIndex + 1) {
+        index = endIndex + 1;
+        continue; // Just "-" is not valid.
+      }
+
+      // suffix-byte-range-spec, e.g. "-500"
+      start = Math.max(size - parsePos(str, dashIndex + 1, endStrIndex), 0);
       end = size - 1;
-    } else if (endStr.length === 0) {
-      end = size - 1;
+    } else {
+      start = parsePos(str, startStrIndex, dashIndex);
+      if (endStrIndex === dashIndex + 1) {
+        // open-ended range, e.g. "9500-"
+        end = size - 1;
+      } else {
+        end = parsePos(str, dashIndex + 1, endStrIndex);
+        if (end > size - 1) end = size - 1;
+      }
     }
 
-    // limit last-byte-pos to current length
-    if (end > size - 1) {
-      end = size - 1;
-    }
+    index = endIndex + 1;
 
-    // invalid format range
     if (isNaN(start) || isNaN(end)) {
       continue;
     }
 
-    // skip unsatisfiable ranges
+    // Invalid or unsatisfiable.
     if (start > end) {
       valid = true;
       continue;
     }
 
-    // add range
     ranges.push({
       start: start,
       end: end,
     });
-  }
+  } while (index < len);
 
   if (ranges.length < 1) {
+    // unsatisfiable
     return valid ? -1 : -2;
   }
 
-  return options && options.combine ? combineRanges(ranges) : ranges;
+  return { type, ranges };
 }
 
 /**
  * Parse string to integer.
- * @private
  */
-
-function parsePos(str: string) {
-  if (/^\d+$/.test(str)) return Number(str);
-  return NaN;
-}
-
-/**
- * Combine overlapping & adjacent ranges.
- * @private
- */
-
-function combineRanges(ranges: rangeParser.Result): rangeParser.Result {
-  var ordered = ranges.map(mapWithIndex).sort(sortByRangeStart);
-
-  for (var j = 0, i = 1; i < ordered.length; i++) {
-    var range = ordered[i];
-    var current = ordered[j];
-
-    if (range.start > current.end + 1) {
-      // next range
-      ordered[++j] = range;
-    } else if (range.end > current.end) {
-      // extend range
-      current.end = range.end;
-      current.index = Math.min(current.index, range.index);
-    }
+function parsePos(str: string, start: number, end: number): number {
+  let value = 0;
+  for (let i = start; i < end; i++) {
+    const code = str.charCodeAt(i);
+    if (code < 48 || code > 57) return NaN; // not a digit
+    value = value * 10 + (code - 48);
   }
 
-  // trim ordered array
-  ordered.length = j + 1;
-
-  // generate combined range
-  var combined = Object.assign(
-    ordered.sort(sortByRangeIndex).map(mapWithoutIndex),
-    { type: ranges.type },
-  );
-
-  return combined;
+  return value;
 }
 
-interface RangeWithIndex extends rangeParser.Range {
+export interface RangeWithIndex extends Range {
   index: number;
 }
 
 /**
- * Map function to add index value to ranges.
- * @private
+ * Combine overlapping & adjacent ranges.
  */
+export function combineRanges(ranges: Range[]): RangeWithIndex[] {
+  const ordered = ranges
+    .map((range, index) => ({ start: range.start, end: range.end, index }))
+    .sort((a, b) => a.start - b.start);
 
-function mapWithIndex(range: rangeParser.Range, index: number): RangeWithIndex {
-  return {
-    start: range.start,
-    end: range.end,
-    index: index,
-  };
-}
+  let j = 0;
+  for (let i = 1; i < ordered.length; i++) {
+    const range = ordered[i];
+    const current = ordered[j];
 
-/**
- * Map function to remove index value from ranges.
- * @private
- */
+    if (range.start > current.end + 1) {
+      ordered[++j] = range;
+    } else {
+      current.end = Math.max(current.end, range.end);
+      current.index = Math.min(current.index, range.index);
+    }
+  }
 
-function mapWithoutIndex(range: rangeParser.Range): rangeParser.Range {
-  return {
-    start: range.start,
-    end: range.end,
-  };
-}
-
-/**
- * Sort function to sort ranges by index.
- * @private
- */
-
-function sortByRangeIndex(a: RangeWithIndex, b: RangeWithIndex) {
-  return a.index - b.index;
-}
-
-/**
- * Sort function to sort ranges by start position.
- * @private
- */
-
-function sortByRangeStart(a: rangeParser.Range, b: rangeParser.Range) {
-  return a.start - b.start;
+  ordered.length = j + 1;
+  return ordered.sort((a, b) => a.index - b.index);
 }

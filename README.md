@@ -4,78 +4,71 @@
 [![NPM Downloads][npm-downloads-image]][npm-url]
 [![Node.js Version][node-image]][node-url]
 [![Build Status][ci-image]][ci-url]
-[![Test Coverage][coveralls-image]][coveralls-url]
+[![Test Coverage][codecov-image]][codecov-url]
 
 Range header field parser.
 
 ## Installation
 
-This is a [Node.js](https://nodejs.org/en/) module available through the
-[npm registry](https://www.npmjs.com/). Installation is done using the
-[`npm install` command](https://docs.npmjs.com/getting-started/installing-npm-packages-locally):
-
 ```sh
-$ npm install range-parser
+npm install range-parser
 ```
 
 ## API
 
-<!-- eslint-disable no-unused-vars -->
-
 ```js
-var parseRange = require("range-parser");
+import { parse, combineRanges } from "range-parser";
 ```
 
-### parseRange(size, header, options)
+### `parse(size, header)`
 
-Parse the given `header` string where `size` is the size of the selected
-representation that is to be partitioned into subranges. An array of subranges
-will be returned or negative numbers indicating an error parsing.
+Parse the given `header` string where `size` is the size of the selected representation that is to be partitioned into subranges. A type and an array of subranges will be returned or negative numbers indicating an error parsing.
 
 - `-2` signals a malformed header string
 - `-1` signals an unsatisfiable range
 
+**Note:** `size` must be a safe integer or a `TypeError` is thrown. The maximum supported file size is `Number.MAX_SAFE_INTEGER` (9,007,199,254,740,991 bytes), about 9 PB.
+
 ```js
 // parse header from request
-var subranges = parseRange(size, req.headers.range);
+var header = req.headers.range;
+var subranges = typeof header === "string" ? parse(size, header) : -2;
 
 // the type of the subranges
-if (subranges.type === "bytes") {
+if (typeof subranges === "object" && subranges.type === "bytes") {
   // the ranges
-  subranges.forEach(function (r) {
+  subranges.ranges.forEach(function (r) {
     // do something with r.start and r.end
   });
 }
 ```
 
-#### Options
+### `combineRanges(ranges)`
 
-These properties are accepted in the options object.
-
-##### combine
-
-Specifies if overlapping & adjacent subranges should be combined, defaults to
-`false`. When `true`, ranges will be combined and returned as if they were
-specified that way in the header.
+Overlapping and adjacent ranges will be combined and returned.
+Returned ranges include the `index` used to preserve their original order.
 
 ```js
-parseRange(100, "bytes=50-55,0-10,5-10,56-60", { combine: true });
-// => [
-//      { start: 0,  end: 10 },
-//      { start: 50, end: 60 }
-//    ]
+const subranges = parse(100, "bytes=50-55,0-10,5-10,56-60");
+if (typeof subranges === "object") {
+  combineRanges(subranges.ranges);
+  // => [
+  //      { start: 50, end: 60, index: 0 },
+  //      { start: 0,  end: 10, index: 1 }
+  //    ]
+}
 ```
 
 ## License
 
 [MIT](LICENSE)
 
-[ci-image]: https://badgen.net/github/checks/jshttp/range-parser/master?label=ci
+[ci-image]: https://img.shields.io/github/actions/workflow/status/jshttp/range-parser/ci.yml?branch=master&label=ci
 [ci-url]: https://github.com/jshttp/range-parser/actions/workflows/ci.yml
-[coveralls-image]: https://badgen.net/coveralls/c/github/jshttp/range-parser/master
-[coveralls-url]: https://coveralls.io/r/jshttp/range-parser?branch=master
-[node-image]: https://badgen.net/npm/node/range-parser
+[codecov-image]: https://img.shields.io/codecov/c/github/jshttp/range-parser/master
+[codecov-url]: https://app.codecov.io/gh/jshttp/range-parser
+[node-image]: https://img.shields.io/node/v/range-parser
 [node-url]: https://nodejs.org/en/download
-[npm-downloads-image]: https://badgen.net/npm/dm/range-parser
+[npm-downloads-image]: https://img.shields.io/npm/dm/range-parser
 [npm-url]: https://npmjs.org/package/range-parser
-[npm-version-image]: https://badgen.net/npm/v/range-parser
+[npm-version-image]: https://img.shields.io/npm/v/range-parser
