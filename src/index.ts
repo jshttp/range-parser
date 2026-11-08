@@ -51,8 +51,8 @@ export function parse(size: number, str: string): Result | -1 | -2 {
     // handle ows around numbers
     let startStrIndex = index;
     let endStrIndex = endIndex;
-    while (str.charCodeAt(startStrIndex) === 32) startStrIndex++;
-    while (str.charCodeAt(endStrIndex - 1) === 32) endStrIndex--;
+    while (isOws(str.charCodeAt(startStrIndex))) startStrIndex++;
+    while (isOws(str.charCodeAt(endStrIndex - 1))) endStrIndex--;
 
     let start = NaN;
     let end = NaN;
@@ -101,6 +101,13 @@ export function parse(size: number, str: string): Result | -1 | -2 {
   }
 
   return { type, ranges };
+}
+
+/**
+ * Check for optional whitespace (SP / HTAB), RFC 9110 section 5.6.3.
+ */
+function isOws(code: number): boolean {
+  return code === 32 || code === 9;
 }
 
 /**

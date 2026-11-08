@@ -212,6 +212,18 @@ describe("parse(len, str)", () => {
     });
   });
 
+  it("should parse str with tab whitespace", () => {
+    var range = parse(1000, "bytes=\t40-80,\t81-90\t,-1\t");
+    expect(range).toEqual({
+      type: "bytes",
+      ranges: [
+        { start: 40, end: 80 },
+        { start: 81, end: 90 },
+        { start: 999, end: 999 },
+      ],
+    });
+  });
+
   it("should parse non-byte range", () => {
     var range = parse(1000, "items=0-5");
     expect(range).toEqual({
