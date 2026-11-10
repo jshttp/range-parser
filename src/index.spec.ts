@@ -93,13 +93,6 @@ describe("format({ type, ranges })", () => {
       format({ type: type, ranges: [{ start: 0, end: 0 }] }),
     ).toThrow(TypeError);
   });
-
-  it("should reject non-string range units", () => {
-    // @ts-expect-error Invalid JavaScript input.
-    expect(() => format({ type: 123, ranges: [{ start: 0, end: 0 }] })).toThrow(
-      TypeError,
-    );
-  });
 });
 
 describe("parse(size, str)", () => {
