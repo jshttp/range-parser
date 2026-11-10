@@ -42,19 +42,33 @@ export function parse(size: number, str: string): Result {
   do {
     const commaIndex = str.indexOf(",", index);
     const endIndex = commaIndex !== -1 ? commaIndex : len;
-    const dashIndex = str.indexOf("-", index);
 
+    // Ignore empty list elements, including optional whitespace.
+    let startStrIndex = index;
+    let endStrIndex = endIndex;
+    while (
+      str.charCodeAt(startStrIndex) === 32 ||
+      str.charCodeAt(startStrIndex) === 9
+    )
+      startStrIndex++;
+
+    while (
+      str.charCodeAt(endStrIndex - 1) === 32 ||
+      str.charCodeAt(endStrIndex - 1) === 9
+    )
+      endStrIndex--;
+
+    if (startStrIndex >= endStrIndex) {
+      index = endIndex + 1;
+      continue;
+    }
+
+    const dashIndex = str.indexOf("-", index);
     if (dashIndex === -1 || dashIndex > endIndex) {
       code |= 1; // Invalid range.
       index = endIndex + 1;
       continue;
     }
-
-    // handle ows around numbers
-    let startStrIndex = index;
-    let endStrIndex = endIndex;
-    while (str.charCodeAt(startStrIndex) === 32) startStrIndex++;
-    while (str.charCodeAt(endStrIndex - 1) === 32) endStrIndex--;
 
     let start = NaN;
     let end = NaN;
@@ -97,6 +111,9 @@ export function parse(size: number, str: string): Result {
       end: end,
     });
   } while (index < len);
+
+  // A range-set must contain at least one nonempty element.
+  if (code === 0 && ranges.length === 0) code = 1;
 
   return { code, type, ranges };
 }

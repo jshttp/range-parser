@@ -208,11 +208,6 @@ describe("parse(size, str)", () => {
   });
 
   it("should return code 2 if all specified ranges are unsatisfiable", () => {
-    expect(parse(200, "bytes=500-20")).toEqual({
-      code: 2,
-      type: "bytes",
-      ranges: [],
-    });
     expect(parse(200, "bytes=500-999")).toEqual({
       code: 2,
       type: "bytes",
@@ -223,6 +218,39 @@ describe("parse(size, str)", () => {
       type: "bytes",
       ranges: [],
     });
+  });
+
+  it.each([
+    "bytes=50-20",
+    "bytes=500-20",
+    "bytes=600-500",
+    "bytes=9007199254740993-9007199254740992",
+    `bytes=${"9".repeat(400)}-${"8".repeat(400)}`,
+  ])("should return code 2 for reversed bounds in %s", (header) => {
+    expect(parse(200, header)).toEqual({ code: 2, type: "bytes", ranges: [] });
+  });
+
+  it("should preserve valid ranges when explicit bounds are reversed", () => {
+    expect(parse(200, "bytes=50-20,0-10")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [{ start: 0, end: 10 }],
+    });
+  });
+
+  it("should report reversed bounds together with unsatisfiable ranges", () => {
+    expect(parse(200, "bytes=50-20,500-600")).toEqual({
+      code: 2,
+      type: "bytes",
+      ranges: [],
+    });
+  });
+
+  it.each([
+    "bytes=9007199254740992-9007199254740993",
+    `bytes=${"8".repeat(400)}-${"9".repeat(400)}`,
+  ])("should keep large ordered bounds unsatisfiable in %s", (header) => {
+    expect(parse(200, header)).toEqual({ code: 2, type: "bytes", ranges: [] });
   });
 
   it("should return code 3 when ranges are malformed and unsatisfiable", () => {
@@ -358,6 +386,18 @@ describe("parse(size, str)", () => {
     });
   });
 
+  it("should parse tabs around range elements", () => {
+    expect(parse(1000, "bytes=\t40-80\t,\t81-\t,\t-1\t")).toEqual({
+      code: 0,
+      type: "bytes",
+      ranges: [
+        { start: 40, end: 80 },
+        { start: 81, end: 999 },
+        { start: 999, end: 999 },
+      ],
+    });
+  });
+
   it("should parse non-byte range", () => {
     var range = parse(1000, "items=0-5");
     expect(range).toEqual({
@@ -405,15 +445,44 @@ describe("parse(size, str)", () => {
     });
   });
 
-  it("should report code 1 for whitespace-only invalid ranges when valid present", () => {
-    var range = parse(1000, "bytes= , 0-10");
+  it.each([
+    "bytes=,0-10",
+    "bytes= , 0-10",
+    "bytes=0-10,",
+    "bytes=0-10,,",
+    "bytes=, ,\t,0-10, \t,",
+  ])("should ignore empty list elements in %s", (header) => {
+    var range = parse(1000, header);
 
     expect(range).toEqual({
-      code: 1,
+      code: 0,
       type: "bytes",
       ranges: [{ start: 0, end: 10 }],
     });
   });
+
+  it("should ignore empty elements between ranges", () => {
+    expect(parse(200, "bytes=0-10,, \t,20-30")).toEqual({
+      code: 0,
+      type: "bytes",
+      ranges: [
+        { start: 0, end: 10 },
+        { start: 20, end: 30 },
+      ],
+    });
+  });
+
+  it.each([
+    ["bytes=,500-600,", 2],
+    ["bytes=,x-,", 1],
+    ["bytes=,x-,,500-600,", 3],
+    ["bytes=, \t,", 1],
+  ])(
+    "should preserve errors while ignoring empty elements in %s",
+    (header, code) => {
+      expect(parse(200, header)).toEqual({ code, type: "bytes", ranges: [] });
+    },
+  );
 
   it.each([
     "bytes=0-10,x-,1000-",

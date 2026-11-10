@@ -48,7 +48,7 @@ var header = req.headers.range;
 var subranges = parse(size, typeof header === "string" ? header : "");
 
 // Process headers whose ranges are all valid and satisfiable.
-if (subranges.type === "bytes" && subranges.length) {
+if (subranges.type === "bytes" && subranges.ranges.length) {
   subranges.ranges.forEach((r) => {
     // Do something with r.start and r.end
   });
