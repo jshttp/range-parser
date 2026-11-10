@@ -14,9 +14,10 @@ export interface Range {
 }
 
 /**
- * Result object contains type and array of Range objects.
+ * Result object contains a status code, type, and array of Range objects.
  */
 export interface Result {
+  code: number;
   type: string;
   ranges: Range[];
 }
@@ -24,47 +25,69 @@ export interface Result {
 /**
  * Parse "Range" header `str` relative to the given file `size`.
  */
-export function parse(size: number, str: string): Result | -1 | -2 {
-  if (!Number.isSafeInteger(size)) {
+export function parse(size: number, str: string): Result {
+  if (!Number.isSafeInteger(size) || size < 0) {
     throw new TypeError(`Invalid size: ${size}`);
   }
 
-  const eqIndex = str.indexOf("=");
-  if (eqIndex === -1) return -2;
-
   const ranges: Range[] = [];
+  const eqIndex = str.indexOf("=");
+  if (eqIndex === -1) return { code: 1, type: "", ranges };
+
   const type = str.slice(0, eqIndex);
   const len = str.length;
   let index = eqIndex + 1;
-  let valid = false;
+  let code: Result["code"] = 0;
+  let hasRange = false;
 
   do {
     const commaIndex = str.indexOf(",", index);
     const endIndex = commaIndex !== -1 ? commaIndex : len;
-    const dashIndex = str.indexOf("-", index);
 
-    if (dashIndex === -1 || dashIndex > endIndex) {
-      index = endIndex + 1;
+    // Ignore empty list elements, including optional whitespace.
+    let startStrIndex = index;
+    let endStrIndex = endIndex;
+    while (
+      str.charCodeAt(startStrIndex) === 32 ||
+      str.charCodeAt(startStrIndex) === 9
+    )
+      startStrIndex++;
+
+    while (
+      str.charCodeAt(endStrIndex - 1) === 32 ||
+      str.charCodeAt(endStrIndex - 1) === 9
+    )
+      endStrIndex--;
+
+    index = endIndex + 1;
+
+    if (startStrIndex >= endStrIndex) {
       continue;
     }
 
-    // handle ows around numbers
-    let startStrIndex = index;
-    let endStrIndex = endIndex;
-    while (str.charCodeAt(startStrIndex) === 32) startStrIndex++;
-    while (str.charCodeAt(endStrIndex - 1) === 32) endStrIndex--;
+    hasRange = true;
+
+    const dashIndex = str.indexOf("-", startStrIndex);
+    if (dashIndex === -1 || dashIndex > endStrIndex) {
+      code |= 1; // Invalid range.
+      continue;
+    }
 
     let start = NaN;
     let end = NaN;
 
     if (startStrIndex === dashIndex) {
       if (endStrIndex === dashIndex + 1) {
-        index = endIndex + 1;
+        code |= 1; // Invalid range.
         continue; // Just "-" is not valid.
       }
 
       // suffix-byte-range-spec, e.g. "-500"
-      start = Math.max(size - parsePos(str, dashIndex + 1, endStrIndex), 0);
+      const suffixLength = parsePos(str, dashIndex + 1, endStrIndex);
+      // A nonzero suffix is satisfiable for an empty file.
+      if (size === 0 && suffixLength > 0) continue;
+
+      start = Math.max(size - suffixLength, 0);
       end = size - 1;
     } else {
       start = parsePos(str, startStrIndex, dashIndex);
@@ -77,15 +100,13 @@ export function parse(size: number, str: string): Result | -1 | -2 {
       }
     }
 
-    index = endIndex + 1;
-
     if (isNaN(start) || isNaN(end)) {
+      code |= 1; // Unable to parse.
       continue;
     }
 
-    // Invalid or unsatisfiable.
     if (start > end) {
-      valid = true;
+      code |= 2; // Bad range request.
       continue;
     }
 
@@ -95,12 +116,10 @@ export function parse(size: number, str: string): Result | -1 | -2 {
     });
   } while (index < len);
 
-  if (ranges.length < 1) {
-    // unsatisfiable
-    return valid ? -1 : -2;
-  }
+  // A range-set must contain at least one nonempty element.
+  if (!hasRange) return { code: 1, type, ranges };
 
-  return { type, ranges };
+  return { code, type, ranges };
 }
 
 /**
@@ -125,6 +144,8 @@ export interface RangeWithIndex extends Range {
  * Combine overlapping & adjacent ranges.
  */
 export function combineRanges(ranges: Range[]): RangeWithIndex[] {
+  if (ranges.length === 0) return [];
+
   const ordered = ranges
     .map((range, index) => ({ start: range.start, end: range.end, index }))
     .sort((a, b) => a.start - b.start);

@@ -22,23 +22,35 @@ import { parse, combineRanges } from "range-parser";
 
 ### `parse(size, header)`
 
-Parse the given `header` string where `size` is the size of the selected representation that is to be partitioned into subranges. A type and an array of subranges will be returned or negative numbers indicating an error parsing.
+Parse the given `header` string where `size` is the size of the selected representation that is to be partitioned into subranges. Always returns an object with `code`, `type`, and `ranges` properties.
 
-- `-2` signals a malformed header string
-- `-1` signals an unsatisfiable range
+- `code: 0` means all ranges were parsed successfully.
+- `code: 1` means the header was malformed.
+- `code: 2` means one or more ranges were unsatisfiable.
+- `code: 3` means both malformed and unsatisfiable ranges were encountered (`1 | 2`).
+
+`ranges` contains all valid and satisfiable ranges. Each range has inclusive `start` and `end` positions.
+
+```js
+parse(200, "bytes=0-99,x-,500-");
+// => {
+//      code: 3,
+//      type: "bytes",
+//      ranges: [{ start: 0, end: 99 }]
+//    }
+```
 
 **Note:** `size` must be a safe integer or a `TypeError` is thrown. The maximum supported file size is `Number.MAX_SAFE_INTEGER` (9,007,199,254,740,991 bytes), about 9 PB.
 
 ```js
 // parse header from request
 var header = req.headers.range;
-var subranges = typeof header === "string" ? parse(size, header) : -2;
+var subranges = parse(size, typeof header === "string" ? header : "");
 
-// the type of the subranges
-if (typeof subranges === "object" && subranges.type === "bytes") {
-  // the ranges
-  subranges.ranges.forEach(function (r) {
-    // do something with r.start and r.end
+// Process headers whose ranges are all valid and satisfiable.
+if (subranges.type === "bytes" && subranges.ranges.length) {
+  subranges.ranges.forEach((r) => {
+    // Do something with r.start and r.end
   });
 }
 ```
@@ -50,7 +62,7 @@ Returned ranges include the `index` used to preserve their original order.
 
 ```js
 const subranges = parse(100, "bytes=50-55,0-10,5-10,56-60");
-if (typeof subranges === "object") {
+if (subranges.ranges.length) {
   combineRanges(subranges.ranges);
   // => [
   //      { start: 50, end: 60, index: 0 },
