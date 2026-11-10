@@ -38,6 +38,7 @@ export function parse(size: number, str: string): Result {
   const len = str.length;
   let index = eqIndex + 1;
   let code: Result["code"] = 0;
+  let hasRange = false;
 
   do {
     const commaIndex = str.indexOf(",", index);
@@ -58,15 +59,17 @@ export function parse(size: number, str: string): Result {
     )
       endStrIndex--;
 
+    index = endIndex + 1;
+
     if (startStrIndex >= endStrIndex) {
-      index = endIndex + 1;
       continue;
     }
 
-    const dashIndex = str.indexOf("-", index);
-    if (dashIndex === -1 || dashIndex > endIndex) {
+    hasRange = true;
+
+    const dashIndex = str.indexOf("-", startStrIndex);
+    if (dashIndex === -1 || dashIndex > endStrIndex) {
       code |= 1; // Invalid range.
-      index = endIndex + 1;
       continue;
     }
 
@@ -76,12 +79,15 @@ export function parse(size: number, str: string): Result {
     if (startStrIndex === dashIndex) {
       if (endStrIndex === dashIndex + 1) {
         code |= 1; // Invalid range.
-        index = endIndex + 1;
         continue; // Just "-" is not valid.
       }
 
       // suffix-byte-range-spec, e.g. "-500"
-      start = Math.max(size - parsePos(str, dashIndex + 1, endStrIndex), 0);
+      const suffixLength = parsePos(str, dashIndex + 1, endStrIndex);
+      // A nonzero suffix is satisfiable for an empty file.
+      if (size === 0 && suffixLength > 0) continue;
+
+      start = Math.max(size - suffixLength, 0);
       end = size - 1;
     } else {
       start = parsePos(str, startStrIndex, dashIndex);
@@ -93,8 +99,6 @@ export function parse(size: number, str: string): Result {
         if (end > size - 1) end = size - 1;
       }
     }
-
-    index = endIndex + 1;
 
     if (isNaN(start) || isNaN(end)) {
       code |= 1; // Unable to parse.
@@ -113,7 +117,7 @@ export function parse(size: number, str: string): Result {
   } while (index < len);
 
   // A range-set must contain at least one nonempty element.
-  if (code === 0 && ranges.length === 0) code = 1;
+  if (!hasRange) return { code: 1, type, ranges };
 
   return { code, type, ranges };
 }
