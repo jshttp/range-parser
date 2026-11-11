@@ -17,7 +17,7 @@ npm install range-parser
 ## API
 
 ```js
-import { parse, combineRanges } from "range-parser";
+import { parse, format, combineRanges } from "range-parser";
 ```
 
 ### `parse(size, header)`
@@ -54,6 +54,29 @@ if (subranges.type === "bytes" && subranges.ranges.length) {
   });
 }
 ```
+
+### `format(obj)`
+
+Format an object containing a range unit `type` and an array of `ranges` with inclusive `start` and `end` positions as a `Range` header.
+
+```js
+format({
+  type: "bytes",
+  ranges: [
+    { start: 0, end: 99 },
+    { start: 200, end: 299 },
+  ],
+});
+// => "bytes=0-99,200-299"
+
+format({ type: "items", ranges: [{ start: 0, end: 5 }] });
+// => "items=0-5"
+
+format(parse(1000, "bytes=900-,-10"));
+// => "bytes=900-999,990-999"
+```
+
+Throws a `TypeError` if the object contains an invalid type or range.
 
 ### `combineRanges(ranges)`
 

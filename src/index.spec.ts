@@ -1,5 +1,99 @@
 import { describe, it, expect } from "vitest";
-import { parse, combineRanges } from "./index.js";
+import { parse, format, combineRanges } from "./index.js";
+
+describe("format({ type, ranges })", () => {
+  it("should format a single byte range", () => {
+    expect(format({ type: "bytes", ranges: [{ start: 0, end: 0 }] })).toBe(
+      "bytes=0-0",
+    );
+  });
+
+  it("should preserve input order without modifying or combining ranges", () => {
+    const ranges = Object.freeze([
+      Object.freeze({ start: 20, end: 30 }),
+      Object.freeze({ start: 0, end: 20 }),
+      Object.freeze({ start: 20, end: 30 }),
+    ]);
+    expect(format({ type: "bytes", ranges })).toBe("bytes=20-30,0-20,20-30");
+  });
+
+  it("should format a custom range unit", () => {
+    expect(format({ type: "items", ranges: [{ start: 0, end: 5 }] })).toBe(
+      "items=0-5",
+    );
+  });
+
+  it("should accept all HTTP token characters in the range unit", () => {
+    const type =
+      "!#$%&'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    expect(format({ type: type, ranges: [{ start: 0, end: 0 }] })).toBe(
+      `${type}=0-0`,
+    );
+  });
+
+  it("should round trip normalized parsed ranges", () => {
+    const result = parse(1000, "bytes=40-80,900-,-10");
+    expect(format(result)).toBe("bytes=40-80,900-999,990-999");
+    expect(parse(1000, format(result))).toEqual(result);
+  });
+
+  it("should format retained ranges regardless of the parse status code", () => {
+    expect(format(parse(100, "bytes=0-9,x-,200-"))).toBe("bytes=0-9");
+  });
+
+  it("should format safe integer boundaries without exponential notation", () => {
+    expect(
+      format({
+        type: "bytes",
+        ranges: [{ start: 0, end: Number.MAX_SAFE_INTEGER }],
+      }),
+    ).toBe("bytes=0-9007199254740991");
+  });
+
+  it("should reject an empty range list", () => {
+    expect(() => format({ type: "bytes", ranges: [] })).toThrow(TypeError);
+  });
+
+  it("should reject sparse range lists", () => {
+    expect(() => format({ type: "bytes", ranges: new Array(1) })).toThrow(
+      TypeError,
+    );
+  });
+
+  it.each([-1, 0.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    "should reject an invalid position of %s",
+    (position) => {
+      expect(() =>
+        format({ type: "bytes", ranges: [{ start: position, end: 10 }] }),
+      ).toThrow(TypeError);
+      expect(() =>
+        format({ type: "bytes", ranges: [{ start: 0, end: position }] }),
+      ).toThrow(TypeError);
+    },
+  );
+
+  it("should reject reversed bounds", () => {
+    expect(() =>
+      format({ type: "bytes", ranges: [{ start: 10, end: 9 }] }),
+    ).toThrow(TypeError);
+  });
+
+  it.each([
+    "",
+    "bytes ",
+    " bytes",
+    "a=b",
+    "a,b",
+    "a/b",
+    "bytes\r\nX: y",
+    "é",
+    "bytes\n",
+  ])("should reject an invalid range unit of %j", (type) => {
+    expect(() =>
+      format({ type: type, ranges: [{ start: 0, end: 0 }] }),
+    ).toThrow(TypeError);
+  });
+});
 
 describe("parse(size, str)", () => {
   it("should return code 1 for an empty str", () => {
@@ -518,12 +612,12 @@ describe("combineRanges(ranges)", () => {
     expect(combineRanges([])).toEqual([]);
   });
 
-  it("should return new ranges without modifying the input", () => {
-    const ranges = [
-      { start: 10, end: 20 },
-      { start: 0, end: 9 },
-      { start: 30, end: 40 },
-    ];
+  it("should return new ranges without modifying input", () => {
+    const ranges = Object.freeze([
+      Object.freeze({ start: 10, end: 20 }),
+      Object.freeze({ start: 0, end: 9 }),
+      Object.freeze({ start: 30, end: 40 }),
+    ]);
     const original = ranges.map((range) => ({ ...range }));
     const combined = combineRanges(ranges);
 
@@ -532,7 +626,6 @@ describe("combineRanges(ranges)", () => {
       { start: 30, end: 40, index: 2 },
     ]);
     expect(ranges).toEqual(original);
-    expect(combined[1]).not.toBe(ranges[2]);
   });
 
   it("should combine overlapping ranges", () => {

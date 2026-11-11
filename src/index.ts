@@ -19,7 +19,39 @@ export interface Range {
 export interface Result {
   code: number;
   type: string;
-  ranges: Range[];
+  ranges: readonly Range[];
+}
+
+/**
+ * Format normalized ranges as a "Range" header value.
+ */
+export function format(obj: Partial<Result>): string {
+  const { type, ranges } = obj;
+
+  if (!type || /[^!#$%&'*+\-.^_`|~0-9A-Za-z]/.test(type)) {
+    throw new TypeError("Invalid range type");
+  }
+
+  if (!ranges || ranges.length === 0) {
+    throw new TypeError("At least one range is required");
+  }
+
+  const parts: string[] = [];
+  for (const range of ranges) {
+    if (
+      !range ||
+      !Number.isSafeInteger(range.start) ||
+      !Number.isSafeInteger(range.end) ||
+      range.start < 0 ||
+      range.end < range.start
+    ) {
+      throw new TypeError("Invalid range");
+    }
+
+    parts.push(`${range.start}-${range.end}`);
+  }
+
+  return `${type}=${parts.join(",")}`;
 }
 
 /**
@@ -143,7 +175,9 @@ export interface RangeWithIndex extends Range {
 /**
  * Combine overlapping & adjacent ranges.
  */
-export function combineRanges(ranges: Range[]): RangeWithIndex[] {
+export function combineRanges(
+  ranges: readonly Range[],
+): readonly RangeWithIndex[] {
   if (ranges.length === 0) return [];
 
   const ordered = ranges
