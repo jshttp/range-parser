@@ -612,12 +612,12 @@ describe("combineRanges(ranges)", () => {
     expect(combineRanges([])).toEqual([]);
   });
 
-  it("should return new ranges without modifying the input", () => {
-    const ranges = [
-      { start: 10, end: 20 },
-      { start: 0, end: 9 },
-      { start: 30, end: 40 },
-    ];
+  it("should return new ranges without modifying input", () => {
+    const ranges = Object.freeze([
+      Object.freeze({ start: 10, end: 20 }),
+      Object.freeze({ start: 0, end: 9 }),
+      Object.freeze({ start: 30, end: 40 }),
+    ]);
     const original = ranges.map((range) => ({ ...range }));
     const combined = combineRanges(ranges);
 
@@ -626,7 +626,6 @@ describe("combineRanges(ranges)", () => {
       { start: 30, end: 40, index: 2 },
     ]);
     expect(ranges).toEqual(original);
-    expect(combined[1]).not.toBe(ranges[2]);
   });
 
   it("should combine overlapping ranges", () => {

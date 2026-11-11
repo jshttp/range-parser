@@ -175,7 +175,9 @@ export interface RangeWithIndex extends Range {
 /**
  * Combine overlapping & adjacent ranges.
  */
-export function combineRanges(ranges: Range[]): RangeWithIndex[] {
+export function combineRanges(
+  ranges: readonly Range[],
+): readonly RangeWithIndex[] {
   if (ranges.length === 0) return [];
 
   const ordered = ranges
