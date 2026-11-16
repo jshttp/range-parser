@@ -68,7 +68,7 @@ if (subranges.type === "bytes" && subranges.ranges.length) {
 
 ### `format(obj)`
 
-Format an object containing a range unit `type` and an array of `ranges` with inclusive `start` and `end` positions as a `Range` header.
+Format an object containing a range unit `type` and a non-empty array of `ranges` with inclusive `start` and `end` positions as a `Range` header.
 
 ```js
 format({
