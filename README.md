@@ -33,6 +33,15 @@ Type is always lower case and is not validated against RFC token syntax, make su
 
 Ranges contain all valid and satisfiable ranges with inclusive `start` and `end` positions.
 
+For an empty representation (`size === 0`), a nonzero suffix range such as `bytes=-1` is satisfiable under [RFC 9110 §14.1.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-14.1.2), but there are no bytes to return:
+
+```js
+parse(0, "bytes=-1");
+// => { code: 0, type: "bytes", ranges: [] }
+```
+
+When serving an empty representation, a server may ignore the `Range` header and send a normal `200 OK` response with `Content-Length: 0`, without a multipart body ([RFC 9110 §14.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-14.2)).
+
 ```js
 parse(200, "bytes=0-99,x-,500-");
 // => {
