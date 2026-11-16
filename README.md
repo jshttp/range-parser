@@ -29,7 +29,9 @@ Parse the given `header` string where `size` is the size of the selected represe
 - `code: 2` means one or more ranges were unsatisfiable.
 - `code: 3` means both malformed and unsatisfiable ranges were encountered (`1 | 2`).
 
-`ranges` contains all valid and satisfiable ranges. Each range has inclusive `start` and `end` positions.
+Type is always lower case and is not validated against RFC token syntax, make sure to validate before using (e.g. `type === "bytes"`).
+
+Ranges contain all valid and satisfiable ranges with inclusive `start` and `end` positions.
 
 ```js
 parse(200, "bytes=0-99,x-,500-");

@@ -25,7 +25,7 @@ export interface Result {
 /**
  * Format normalized ranges as a "Range" header value.
  */
-export function format(obj: Partial<Result>): string {
+export function format(obj: Pick<Result, "type" | "ranges">): string {
   const { type, ranges } = obj;
 
   if (!type || /[^!#$%&'*+\-.^_`|~0-9A-Za-z]/.test(type)) {
@@ -66,7 +66,7 @@ export function parse(size: number, str: string): Result {
   const eqIndex = str.indexOf("=");
   if (eqIndex === -1) return { code: 1, type: "", ranges };
 
-  const type = str.slice(0, eqIndex);
+  const type = str.slice(0, eqIndex).toLowerCase();
   const len = str.length;
   let index = eqIndex + 1;
   let code: Result["code"] = 0;

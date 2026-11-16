@@ -96,6 +96,17 @@ describe("format({ type, ranges })", () => {
 });
 
 describe("parse(size, str)", () => {
+  it.each(["BYTES", "Bytes", "bYtEs", "ITEMS"])(
+    "should lowercase the parsed range unit %s",
+    (type) => {
+      expect(parse(100, `${type}=0-9`)).toEqual({
+        code: 0,
+        type: type.toLowerCase(),
+        ranges: [{ start: 0, end: 9 }],
+      });
+    },
+  );
+
   it("should return code 1 for an empty str", () => {
     expect(parse(200, "")).toEqual({ code: 1, type: "", ranges: [] });
   });
