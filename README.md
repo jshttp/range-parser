@@ -17,7 +17,7 @@ npm install range-parser
 ## API
 
 ```js
-import { parse, combineRanges } from "range-parser";
+import { parse, format, combineRanges } from "range-parser";
 ```
 
 ### `parse(size, header)`
@@ -29,7 +29,9 @@ Parse the given `header` string where `size` is the size of the selected represe
 - `code: 2` means one or more ranges were unsatisfiable.
 - `code: 3` means both malformed and unsatisfiable ranges were encountered (`1 | 2`).
 
-`ranges` contains all valid and satisfiable ranges. Each range has inclusive `start` and `end` positions.
+Type is always lower case and is not validated against RFC token syntax, make sure to validate before using (e.g. `type === "bytes"`).
+
+Ranges contain all valid and satisfiable ranges with inclusive `start` and `end` positions.
 
 ```js
 parse(200, "bytes=0-99,x-,500-");
@@ -54,6 +56,29 @@ if (subranges.type === "bytes" && subranges.ranges.length) {
   });
 }
 ```
+
+### `format(obj)`
+
+Format an object containing a range unit `type` and an array of `ranges` with inclusive `start` and `end` positions as a `Range` header.
+
+```js
+format({
+  type: "bytes",
+  ranges: [
+    { start: 0, end: 99 },
+    { start: 200, end: 299 },
+  ],
+});
+// => "bytes=0-99,200-299"
+
+format({ type: "items", ranges: [{ start: 0, end: 5 }] });
+// => "items=0-5"
+
+format(parse(1000, "bytes=900-,-10"));
+// => "bytes=900-999,990-999"
+```
+
+Throws a `TypeError` if the object contains an invalid type or range.
 
 ### `combineRanges(ranges)`
 
