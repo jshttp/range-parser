@@ -124,6 +124,14 @@ describe("parse(size, str)", () => {
     });
   });
 
+  it("should retain a valid range after a range missing its dash", () => {
+    expect(parse(200, "bytes=100200,0-9")).toEqual({
+      code: 1,
+      type: "bytes",
+      ranges: [{ start: 0, end: 9 }],
+    });
+  });
+
   it("should return code 1 for empty range value", () => {
     expect(parse(200, "bytes=")).toEqual({
       code: 1,

@@ -71,7 +71,7 @@ export function parse(size: number, str: string): Result {
   let index = eqIndex + 1;
   let code: Result["code"] = 0;
   let hasRange = false;
-  let dashIndex = str.indexOf("-", index);
+  let dashIndex = -1;
 
   do {
     const commaIndex = str.indexOf(",", index);
@@ -103,9 +103,10 @@ export function parse(size: number, str: string): Result {
     // Find the next dash.
     if (dashIndex < startStrIndex) {
       dashIndex = str.indexOf("-", startStrIndex);
+      if (dashIndex === -1) dashIndex = len;
     }
 
-    if (dashIndex > endStrIndex) {
+    if (dashIndex >= endStrIndex) {
       code |= 1; // Invalid range.
       continue;
     }
