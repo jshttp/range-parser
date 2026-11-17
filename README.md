@@ -44,18 +44,47 @@ parse(200, "bytes=0-99,x-,500-");
 
 **Note:** `size` must be a safe integer or a `TypeError` is thrown. The maximum supported file size is `Number.MAX_SAFE_INTEGER` (9,007,199,254,740,991 bytes), about 9 PB.
 
-```js
-// parse header from request
-var header = req.headers.range;
-var subranges = parse(size, typeof header === "string" ? header : "");
+**Empty files:** Ranges for a zero-length representation return `code: 2`. Some clients send a `Range` header on every request to limit response size. Callers can ignore unsatisfiable ranges for empty files and serve an empty `200 OK` response instead of `416 Range Not Satisfiable`:
 
-// Process headers whose ranges are all valid and satisfiable.
-if (subranges.type === "bytes" && subranges.ranges.length) {
-  subranges.ranges.forEach((r) => {
-    // Do something with r.start and r.end
-  });
+```js
+const header = req.headers.range;
+const subranges = header ? parse(size, header) : null;
+let ranges = [];
+
+if (subranges && subranges.type === "bytes") {
+  if (subranges.code & 1) {
+    res.statusCode = 400;
+    res.end();
+    return;
+  }
+
+  if (subranges.ranges.length === 0) {
+    if (size === 0) {
+      res.statusCode = 200;
+      res.setHeader("Content-Length", "0");
+      res.end();
+      return;
+    }
+
+    res.setHeader("Content-Range", `bytes */${size}`);
+    res.statusCode = 416;
+    res.end();
+    return;
+  }
+
+  ranges = combineRanges(subranges.ranges);
+}
+
+if (ranges.length === 0) {
+  // Send 200 OK.
+} else if (ranges.length === 1) {
+  // Send 206 with `Content-Range` header.
+} else {
+  // Send 206 with `Content-Type: multipart/byteranges; boundary=...`.
 }
 ```
+
+**Security:** Callers should limit the `Range` header length before parsing and the number of ranges they serve. Use `combineRanges()` to merge overlapping and adjacent ranges, and limit total response bytes and multipart overhead to reduce denial-of-service risk. Rejecting requests whose total requested bytes exceed the representation size is a useful additional safeguard, but does not catch many small ranges with excessive multipart overhead.
 
 ### `format(obj)`
 

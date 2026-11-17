@@ -377,9 +377,9 @@ describe("parse(size, str)", () => {
   });
 
   it.each(["bytes=-1", "bytes=-500", "bytes=,-1,", "bytes=-1,-2"])(
-    "should accept nonzero suffixes for an empty representation in %s",
+    "should return code 2 for nonzero suffixes for an empty representation in %s",
     (header) => {
-      expect(parse(0, header)).toEqual({ code: 0, type: "bytes", ranges: [] });
+      expect(parse(0, header)).toEqual({ code: 2, type: "bytes", ranges: [] });
     },
   );
 
@@ -388,7 +388,7 @@ describe("parse(size, str)", () => {
     ["bytes=0-", 2],
     ["bytes=0-0", 2],
     ["bytes=-x", 1],
-    ["bytes=-1,x-", 1],
+    ["bytes=-1,x-", 3],
     ["bytes=-1,0-", 2],
     ["bytes=-1,-0", 2],
     ["bytes=-1,x-,0-", 3],

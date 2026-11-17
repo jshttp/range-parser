@@ -116,9 +116,6 @@ export function parse(size: number, str: string): Result {
 
       // suffix-byte-range-spec, e.g. "-500"
       const suffixLength = parsePos(str, dashIndex + 1, endStrIndex);
-      // A nonzero suffix is satisfiable for an empty file.
-      if (size === 0 && suffixLength > 0) continue;
-
       start = Math.max(size - suffixLength, 0);
       end = size - 1;
     } else {
