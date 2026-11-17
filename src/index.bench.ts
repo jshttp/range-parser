@@ -22,6 +22,9 @@ describe("parse edge cases", () => {
     ["malformed", "bytes=abc-def"],
     ["unsatisfiable", "bytes=2000-3000"],
     ["overflowing position", `bytes=0-${"9".repeat(400)}`],
+    ["long start position", `bytes=${"9".repeat(400)}-`],
+    ["long malformed range", `bytes=${"x".repeat(400)}`],
+    ["many ranges without dashes", `bytes=${"x,".repeat(100)}`],
     ["many invalid ranges", `bytes=${"x,".repeat(100)}0-99`],
   ]) {
     test(name, ({ bench }) => {

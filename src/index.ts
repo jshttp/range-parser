@@ -71,6 +71,7 @@ export function parse(size: number, str: string): Result {
   let index = eqIndex + 1;
   let code: Result["code"] = 0;
   let hasRange = false;
+  let dashIndex = str.indexOf("-", index);
 
   do {
     const commaIndex = str.indexOf(",", index);
@@ -99,8 +100,12 @@ export function parse(size: number, str: string): Result {
 
     hasRange = true;
 
-    const dashIndex = str.indexOf("-", startStrIndex);
-    if (dashIndex === -1 || dashIndex > endStrIndex) {
+    // Find the next dash.
+    if (dashIndex < startStrIndex) {
+      dashIndex = str.indexOf("-", startStrIndex);
+    }
+
+    if (dashIndex > endStrIndex) {
       code |= 1; // Invalid range.
       continue;
     }
@@ -109,9 +114,10 @@ export function parse(size: number, str: string): Result {
     let end = NaN;
 
     if (startStrIndex === dashIndex) {
+      // Just "-" is not valid.
       if (endStrIndex === dashIndex + 1) {
         code |= 1; // Invalid range.
-        continue; // Just "-" is not valid.
+        continue;
       }
 
       // suffix-byte-range-spec, e.g. "-500"
@@ -128,11 +134,19 @@ export function parse(size: number, str: string): Result {
         end = size - 1;
       } else {
         end = parsePos(str, dashIndex + 1, endStrIndex);
+
+        // Malformed reversed range.
+        if (start > end) {
+          code |= 1;
+          continue;
+        }
+
+        // Incorrect end, resize.
         if (end > size - 1) end = size - 1;
       }
     }
 
-    if (isNaN(start) || isNaN(end)) {
+    if (Number.isNaN(start) || Number.isNaN(end)) {
       code |= 1; // Unable to parse.
       continue;
     }

@@ -325,19 +325,20 @@ describe("parse(size, str)", () => {
     });
   });
 
-  it.each([
-    "bytes=50-20",
-    "bytes=500-20",
-    "bytes=600-500",
-    "bytes=9007199254740993-9007199254740992",
-    `bytes=${"9".repeat(400)}-${"8".repeat(400)}`,
-  ])("should return code 2 for reversed bounds in %s", (header) => {
-    expect(parse(200, header)).toEqual({ code: 2, type: "bytes", ranges: [] });
-  });
+  it.each(["bytes=50-20", "bytes=500-20", "bytes=600-500"])(
+    "should return code 1 for reversed bounds in %s",
+    (header) => {
+      expect(parse(200, header)).toEqual({
+        code: 1,
+        type: "bytes",
+        ranges: [],
+      });
+    },
+  );
 
   it("should preserve valid ranges when explicit bounds are reversed", () => {
     expect(parse(200, "bytes=50-20,0-10")).toEqual({
-      code: 2,
+      code: 1,
       type: "bytes",
       ranges: [{ start: 0, end: 10 }],
     });
@@ -345,18 +346,27 @@ describe("parse(size, str)", () => {
 
   it("should report reversed bounds together with unsatisfiable ranges", () => {
     expect(parse(200, "bytes=50-20,500-600")).toEqual({
-      code: 2,
+      code: 3,
       type: "bytes",
       ranges: [],
     });
   });
 
   it.each([
+    "bytes=9007199254740993-9007199254740992",
+    `bytes=${"9".repeat(400)}-${"8".repeat(400)}`,
     "bytes=9007199254740992-9007199254740993",
     `bytes=${"8".repeat(400)}-${"9".repeat(400)}`,
-  ])("should keep large ordered bounds unsatisfiable in %s", (header) => {
-    expect(parse(200, header)).toEqual({ code: 2, type: "bytes", ranges: [] });
-  });
+  ])(
+    "should report code 2 for bounds beyond numeric precision in %s",
+    (header) => {
+      expect(parse(200, header)).toEqual({
+        code: 2,
+        type: "bytes",
+        ranges: [],
+      });
+    },
+  );
 
   it("should return code 3 when ranges are malformed and unsatisfiable", () => {
     expect(parse(200, "bytes=abc-def,500-999")).toEqual({
