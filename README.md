@@ -44,22 +44,44 @@ parse(200, "bytes=0-99,x-,500-");
 
 **Note:** `size` must be a safe integer or a `TypeError` is thrown. The maximum supported file size is `Number.MAX_SAFE_INTEGER` (9,007,199,254,740,991 bytes), about 9 PB.
 
-```js
-// parse header from request
-var header = req.headers.range;
-var subranges = parse(size, typeof header === "string" ? header : "");
+**Empty files:** A nonzero suffix range such as `bytes=-1` for a zero-length representation returns `code: 0` with an empty `ranges` array. Other ranges, such as `bytes=0-`, are unsatisfiable. Some clients send a `Range` header on every request to limit response size. The example below rejects malformed byte ranges, but ignores unsatisfiable ranges for empty files so they receive a normal empty `200 OK` response.
 
-// Process headers whose ranges are all valid and satisfiable.
-if (subranges.type === "bytes" && subranges.ranges.length) {
-  subranges.ranges.forEach((r) => {
-    // Do something with r.start and r.end
-  });
+```js
+const header = req.headers.range;
+const subranges = header ? parse(size, header) : null;
+let ranges = [];
+
+if (subranges && subranges.type === "bytes") {
+  if (subranges.code & 1) {
+    res.statusCode = 400;
+    res.end();
+    return;
+  }
+
+  if (subranges.ranges.length === 0 && size !== 0) {
+    res.setHeader("Content-Range", `bytes */${size}`);
+    res.statusCode = 416;
+    res.end();
+    return;
+  }
+
+  ranges = combineRanges(subranges.ranges);
+}
+
+if (ranges.length === 0) {
+  // Send 200 OK with `Content-Length: size` (including 0 for empty files).
+} else if (ranges.length === 1) {
+  // Send 206 with `Content-Range: bytes ${range[0]}-${ranges[1]}/${size}` header.
+} else {
+  // Send 206 with `Content-Type: multipart/byteranges; boundary=...`.
 }
 ```
 
+**Security:** Callers should limit the `Range` header length before parsing and the number of ranges they serve. Use `combineRanges()` to merge overlapping and adjacent ranges, and limit total response bytes and multipart overhead to reduce denial-of-service risk. Rejecting requests whose total requested bytes exceed the representation size is a useful additional safeguard, but does not catch many small ranges with excessive multipart overhead.
+
 ### `format(obj)`
 
-Format an object containing a range unit `type` and an array of `ranges` with inclusive `start` and `end` positions as a `Range` header.
+Format an object containing a range unit `type` and a non-empty array of `ranges` with inclusive `start` and `end` positions as a `Range` header.
 
 ```js
 format({
