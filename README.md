@@ -71,7 +71,8 @@ if (subranges && subranges.type === "bytes") {
 if (ranges.length === 0) {
   // Send 200 OK with `Content-Length: size` (including 0 for empty files).
 } else if (ranges.length === 1) {
-  // Send 206 with `Content-Range: bytes ${range[0]}-${ranges[1]}/${size}` header.
+  const { start, end } = ranges[0];
+  // Send 206 with `Content-Range: bytes ${start}-${end}/${size}` header.
 } else {
   // Send 206 with `Content-Type: multipart/byteranges; boundary=...`.
 }
