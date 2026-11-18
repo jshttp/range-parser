@@ -1,6 +1,5 @@
 .nyc_output
 node_modules
 coverage
-package-lock.json
 dist/
 *.tsbuildinfo
