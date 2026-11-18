@@ -25,9 +25,9 @@ import { parse, format, combineRanges } from "range-parser";
 Parse the given `header` string where `size` is the size of the selected representation that is to be partitioned into subranges. Always returns an object with `code`, `type`, and `ranges` properties.
 
 - `code: 0` means all ranges were parsed successfully.
-- `code: 1` means the header was malformed.
+- `code: 1` means the header was malformed or contained an invalid range (such as reversed bounds `50-20`).
 - `code: 2` means one or more ranges were unsatisfiable.
-- `code: 3` means both malformed and unsatisfiable ranges were encountered (`1 | 2`).
+- `code: 3` means both malformed or invalid ranges and unsatisfiable ranges were encountered (`1 | 2`).
 
 Type is always lower case and is not validated against RFC token syntax, make sure to validate before using (e.g. `type === "bytes"`).
 
@@ -71,7 +71,8 @@ if (subranges && subranges.type === "bytes") {
 if (ranges.length === 0) {
   // Send 200 OK with `Content-Length: size` (including 0 for empty files).
 } else if (ranges.length === 1) {
-  // Send 206 with `Content-Range: bytes ${range[0]}-${ranges[1]}/${size}` header.
+  const { start, end } = ranges[0];
+  // Send 206 with `Content-Range: bytes ${start}-${end}/${size}` header.
 } else {
   // Send 206 with `Content-Type: multipart/byteranges; boundary=...`.
 }
